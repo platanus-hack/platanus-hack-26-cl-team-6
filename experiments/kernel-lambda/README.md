@@ -142,3 +142,21 @@ container.
 - `kernel_harness.py`: correctness and timing harness
 - `baseline_attention.py`: starting kernel
 - `fit_lambda.py`: λ fit, bootstrap CIs, plot, `--simulate` self-check
+
+### Run 2 with tokens as the budget unit
+
+`fit_lambda_tokens.py` refits run 2 with each team's actual token usage as the budget instead of the number of
+experiments (data in `data/tokens_run2.csv`, extracted from the Inspect logs by `extract_tokens.py`).
+The unit is output tokens (including reasoning), as in Ord's charts. Cache reads and re-read context are left out,
+because they grow roughly quadratically with episode length (critique point 2).
+
+| budget unit | independent | shared leaderboard |
+|---|---|---|
+| experiments (headline above) | 0.48 [0.40, 0.58] | 0.47 [0.37, 0.56] |
+| output tokens | 0.38 [0.27, 0.50] | 0.50 [0.42, 0.58] |
+| total tokens incl. cache reads (not recommended) | 0.19 [0.12, 0.27] | −0.15 [−0.20, −0.10] |
+
+Ord interpolation, 90% bootstrap CI, 0 of 9 multi-agent configs censored. The output-token estimates overlap the
+experiment-based ones, so the conclusion is the same: λ is roughly 0.4–0.5. Shared teams wrote fewer tokens per
+experiment than independent ones (16×1: 11.9k vs 15.3k), which is why the shared estimate moves up a little. Counting total tokens mostly measures how much context each agent re-reads, which is why that row is
+off (the shared leaderboard adds reads), and it shouldn't be used for λ.
