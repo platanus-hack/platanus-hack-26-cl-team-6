@@ -1,1 +1,1 @@
-Una detector híbrido que identifica datos maliciosos en agent swarms.
+Un detector híbrido que identifica datos maliciosos en agent swarms.
