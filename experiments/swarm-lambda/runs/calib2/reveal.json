@@ -1,0 +1,179 @@
+{
+ "tasks": [
+  {
+   "id": "T00",
+   "depth": 5,
+   "noise": 2.0,
+   "seed": 45389229307205,
+   "answer": "budget_2027_draft.xlsx|svc_deploy|galnor.io"
+  },
+  {
+   "id": "T01",
+   "depth": 5,
+   "noise": 2.0,
+   "seed": 112630418192523,
+   "answer": "litigation_hold.docx|svc_deploy|datmon.net"
+  },
+  {
+   "id": "T02",
+   "depth": 6,
+   "noise": 2.0,
+   "seed": 31185234571813,
+   "answer": "WS-238,WS-845|litigation_hold.docx|netnet.com"
+  },
+  {
+   "id": "T03",
+   "depth": 6,
+   "noise": 2.0,
+   "seed": 200613549712130,
+   "answer": "WS-301,WS-661|salary_review_2026.xlsx|firkap.io"
+  }
+ ],
+ "runs": [
+  {
+   "task": "T03",
+   "effort": "low",
+   "N": 1,
+   "given": [
+    "ws-301,ws-661|employee_ssn_list.xlsx|firkap.io"
+   ],
+   "voted": "ws-301,ws-661|employee_ssn_list.xlsx|firkap.io",
+   "texts": [
+    "hen sent 15 DNS queries with hex-like subdomains to `*.t.firkap.io` between 11:58:00 and 11:58:42. That is the registrable domain `firkap.io`.\n\nThe choice of `employee_ssn_list.xlsx` over `salary_review_2026.xlsx` is an inference from the deletion timing, not a direct log match. No log names the archive that was sent, so I weighted the cleanup of `yaglmt.7z` as the sign it was the exfiltrated one."
+   ]
+  },
+  {
+   "task": "T00",
+   "effort": "low",
+   "N": 1,
+   "given": [
+    "budget_2027_draft.xlsx|svc_deploy|galnor.io"
+   ],
+   "voted": "budget_2027_draft.xlsx|svc_deploy|galnor.io",
+   "texts": [
+    " points to credential guessing.\n- **Domain:** `galnor.io`. From SRV-FIN05 there are 12 DNS queries of the form `<hex>.t.galnor.io` between 11:44:00 and 11:44:33, all answered 0.0.0.0. The registrable domain is `galnor.io`.\n\nThe link between the specific archive and the tunnel is inferred from timing and the deletion, since the DNS payload itself is not decoded. The overall chain is well supported."
+   ]
+  },
+  {
+   "task": "T01",
+   "effort": "low",
+   "N": 1,
+   "given": [
+    "litigation_hold.docx|svc_deploy|datmon.net"
+   ],
+   "voted": "litigation_hold.docx|svc_deploy|datmon.net",
+   "texts": [
+    " logs don't contain the payload, so I can't confirm it from content. I also didn't decode the hex labels, so the file identity rests on the staging and deletion sequence.\n\nThe `svc_backup` PUTs to `vexkap.com` are large but match the normal nightly 7z backup pattern on other servers, so I treated them as a decoy. The `bexzen.co` upload from WS-910 is a separate user action, not part of this chain."
+   ]
+  },
+  {
+   "task": "T02",
+   "effort": "low",
+   "N": 1,
+   "given": [
+    "ws-238,ws-845|litigation_hold.docx|netnet.com"
+   ],
+   "voted": "ws-238,ws-845|litigation_hold.docx|netnet.com",
+   "texts": [
+    "ion is inferred from the archive deletion timeline.\n- I excluded `galnet.info` (198.51.100.9). Its 80 queries come from about 33 hosts with 32-character hex subdomains at low volume, which looks like background noise rather than the malware's C2. None of the malicious process chains reference it.\n- I excluded SRV-DB02 because its only related activity was `galnet.info` lookups, not `temgalnet.io`."
+   ]
+  },
+  {
+   "task": "T00",
+   "effort": "high",
+   "N": 1,
+   "given": [
+    "budget_2027_draft.xlsx|svc_deploy|galnor.io"
+   ],
+   "voted": "budget_2027_draft.xlsx|svc_deploy|galnor.io",
+   "texts": [
+    "ries from many workstations are benign, so the registrable domain is `galnor.io`.\n- **File:** The payroll archive (`aglgip.7z`) was deleted at 11:30, before the tunnel started, so it could not have been the data sent. The budget archive (`attzty.7z`) was never deleted, which makes it the likely one sent. The logs don't name the archive in the DNS traffic, so this is an inference from the timeline."
+   ]
+  },
+  {
+   "task": "T03",
+   "effort": "high",
+   "N": 1,
+   "given": [
+    "ws-301,ws-661|salary_review_2026.xlsx|firkap.io"
+   ],
+   "voted": "ws-301,ws-661|salary_review_2026.xlsx|firkap.io",
+   "texts": [
+    "ames. Those queries came after the 11:40 cleanup, so the file still on disk was `wizdgb.7z`, which holds `salary_review_2026.xlsx`. That is why I chose it over `employee_ssn_list.xlsx`. The hex labels decode to random-looking bytes, so they don't name the file.\n- **Not exfiltration:** The large PUTs to `dalsel.info/vault/*.7z` come from the scheduled `svc_backup` jobs and look like normal backups."
+   ]
+  },
+  {
+   "task": "T02",
+   "effort": "high",
+   "N": 1,
+   "given": [
+    "ws-238,ws-845|litigation_hold.docx|netnet.com"
+   ],
+   "voted": "ws-238,ws-845|litigation_hold.docx|netnet.com",
+   "texts": [
+    " This is an inference: the logs do not name the archive in the DNS traffic, and the choice rests on the deletion of the other archive.\n\n**Exfiltration domain:** `netnet.com`, from 11 hex-labelled queries from SRV-FILE01 to `*.t.netnet.com`.\n\nThe nightly `kaptra.co` uploads from the `svc_backup` account are large but use backup-style archive names on a routine schedule, so I treated them as benign."
+   ]
+  },
+  {
+   "task": "T01",
+   "effort": "high",
+   "N": 1,
+   "given": [
+    "litigation_hold.docx|svc_deploy|datmon.net"
+   ],
+   "voted": "litigation_hold.docx|svc_deploy|datmon.net",
+   "texts": [
+    "1 between 11:17 and 11:19, then `svc_deploy` succeeded at 11:20. The staging commands ran under that account.\n- **Domain:** `datmon.net`. At 11:58 SRV-FILE01 sent a burst of about 12 DNS queries to `*.t.datmon.net` with long hex labels, which is the only exfiltration channel in the logs. The answers were sinkholed (0.0.0.0). Ordinary `datmon.net` browsing by other hosts is benign and was not used."
+   ]
+  },
+  {
+   "task": "T00",
+   "effort": "max",
+   "N": 1,
+   "given": [
+    "budget_2027_draft.xlsx|svc_deploy|galnor.io"
+   ],
+   "voted": "budget_2027_draft.xlsx|svc_deploy|galnor.io",
+   "texts": [
+    "e file sent out.\n- The 19:13\u201320:43 PUTs to `skypho.info` are the routine `svc_backup` uploads of `srv-*_daily.7z` archives, which are not original share file names.\n- `galnor.com` lookups are a look-alike of the malicious `galnor.io`.\n\nThe tunnel answers were all `0.0.0.0`, which suggests a resolver sinkhole. The queries still carried the data out, so I treated the exfiltration as having happened."
+   ]
+  },
+  {
+   "task": "T02",
+   "effort": "max",
+   "N": 1,
+   "given": [
+    "ws-238,ws-845|litigation_hold.docx|netnet.com"
+   ],
+   "voted": "ws-238,ws-845|litigation_hold.docx|netnet.com",
+   "texts": [
+    "cious process activity on them.\n- `edge.galnet.info`: scattered single lookups from many hosts.\n- The `kaptra.co/vault` PUTs and `archiver.exe` runs: scheduled `svc_backup` jobs.\n- `dario.fuentes`' 47 MB upload of `IMG_6676.zip` to `bexbex.info` from WS-921: no link to the attack chain.\n\n`nornor.com` served the malicious `invoice_99874.docm` to WS-845 and is the delivery domain rather than the C2."
+   ]
+  },
+  {
+   "task": "T01",
+   "effort": "max",
+   "N": 1,
+   "given": [
+    "litigation_hold.docx|svc_deploy|datmon.net"
+   ],
+   "voted": "litigation_hold.docx|svc_deploy|datmon.net",
+   "texts": [
+    "ent.exe`), with no single file or temp name.\n- `temmonpho.com` is a beacon from WS-925 (ben.soto), a separate chain not tied to the share.\n- `phomon.io` has scattered single queries across about 35 hosts, and `hubpho.co` is routine check traffic.\n\nConfidence is high. The file identity rests on the decoded header and the timeline, since no proxy or process event names the archive that was uploaded."
+   ]
+  },
+  {
+   "task": "T03",
+   "effort": "max",
+   "N": 1,
+   "given": [
+    "ws-301,ws-661|salary_review_2026.xlsx|firkap.io"
+   ],
+   "voted": "ws-301,ws-661|salary_review_2026.xlsx|firkap.io",
+   "texts": [
+    "n, so the deleted archive cannot have been the one sent.\n- **Decoys ruled out:** the large uploads to `dalsel.info` are scheduled `svc_backup` backups. The 68 MB upload to `monmon.com` is a user's photo archive. `nethub.com` and `skyfir.info` are fleet-wide DNS lookups with no link to the compromise.\n\nI did not write anything to `../shared/NOTES.md`, so the other agents' analyses stay independent."
+   ]
+  }
+ ],
+ "total_cost": 0.38110158
+}

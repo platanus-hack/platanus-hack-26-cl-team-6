@@ -1,0 +1,32 @@
+{
+ "task": "T00",
+ "depth": 1,
+ "noise": 1.0,
+ "effort": "low",
+ "N": 2,
+ "correct": true,
+ "any_correct": true,
+ "n_answered": 2,
+ "wall_s": 25.7,
+ "out_tokens_total": 7065,
+ "cost": 0.01383,
+ "notes_chars": 586,
+ "agents": [
+  {
+   "status": "success",
+   "out_tokens": 3321,
+   "cost": 0.00754542,
+   "turns": 8,
+   "dur": 24.782973051071167
+  },
+  {
+   "status": "success",
+   "out_tokens": 3744,
+   "cost": 0.00628323,
+   "turns": 8,
+   "dur": 25.706160068511963
+  }
+ ],
+ "truth": "galmon.com",
+ "voted": "galmon.com"
+}

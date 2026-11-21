@@ -1,0 +1,184 @@
+{
+ "tasks": [
+  {
+   "id": "T00",
+   "depth": 2,
+   "noise": 1.0,
+   "seed": 11637451685841,
+   "answer": "svc_sql"
+  },
+  {
+   "id": "T01",
+   "depth": 3,
+   "noise": 1.0,
+   "seed": 45385321243347,
+   "answer": "patent_draft_77.docx|nordat.com"
+  },
+  {
+   "id": "T02",
+   "depth": 4,
+   "noise": 1.0,
+   "seed": 186582002702229,
+   "answer": "WS-194|vexnordal.com|SRV-HR04"
+  }
+ ],
+ "runs": [
+  {
+   "task": "T01",
+   "effort": "low",
+   "N": 1,
+   "given": [
+    "patent_draft_77.docx|nordat.com"
+   ],
+   "voted": "patent_draft_77.docx|nordat.com",
+   "texts": [
+    "es.nordat.com` from SRV-FILE01.\n- **11:58 UTC:** `svc_sql` sent a PUT of `https://files.nordat.com/upload/lwrjwo.7z` (about 115 MB out) and the proxy allowed it.\n\nThe registrable domain is `nordat.com`. The `svc_sql` account logged in from 10.20.3.10 after several failed attempts by other accounts from the same address, which supports the compromise reading, though I did not dig further into that."
+   ]
+  },
+  {
+   "task": "T00",
+   "effort": "low",
+   "N": 1,
+   "given": [
+    "svc_sql"
+   ],
+   "voted": "svc_sql",
+   "texts": [
+    "d. 11:02:30: svc_deploy, failed.\n- 11:03: svc_sql, failed. 11:03:30: adm.dario, failed.\n- 11:04:00: svc_sql, **succeeded** on SRV-FILE01. This is the first successful logon to a server from WS-332 after the compromise.\n\nThe earlier fabio.rios logon to SRV-FIN05 at 08:56 came before the macro ran, and the later fabio.rios logons at 17:43 onward are the user's own activity, so neither is the answer."
+   ]
+  },
+  {
+   "task": "T02",
+   "effort": "low",
+   "N": 1,
+   "given": [
+    "ws-194|vexnordal.com|srv-hr04"
+   ],
+   "voted": "ws-194|vexnordal.com|srv-hr04",
+   "texts": [
+    "R\\salary_review_2026.xlsx` into `C:\\ProgramData\\tmp\\mfqmkv.7z`. At 10:09 that archive was PUT to `files.uladal.net`.\n\nThe `adm.felix` activity on SRV-HR04 is the main caveat. Its `archiver.exe` run and upload match the exfiltration pattern, but I did not trace how that account was compromised. The 20:11 `svc_backup` archive on the same server is routine backup activity and is not the staging step."
+   ]
+  },
+  {
+   "task": "T01",
+   "effort": "low",
+   "N": 2,
+   "given": [
+    "patent_draft_77.docx|nordat.com",
+    "patent_draft_77.docx|nordat.com"
+   ],
+   "voted": "patent_draft_77.docx|nordat.com",
+   "texts": [
+    "istrable domain is `nordat.com`.\n\nI ruled out the other large outbound transfers. The `svc_backup` PUTs to `firzen.info` are scheduled daily backups of several servers, and the `IMG_4799.zip` upload to `rinnor.info` is from a workstation user. The `temlumlum.com` POSTs are small sync-style requests.\n\nI wrote the answer to `../shared/answers/agent_0.txt` and appended a note to `../shared/NOTES.md`.",
+    "e other large outbound transfers:\n- The five large `PUT`s to `firzen.info` are `svc_backup` jobs. Each one matches a scheduled `archiver.exe` backup run, so they are benign.\n- The 84 MB `PUT` to `rinnor.info` by celia.pinto uploads `IMG_4799.zip`. It has no matching archive creation in the process log.\n\nI did not check the auth log in detail. The answer rests on the process, proxy and DNS records."
+   ]
+  },
+  {
+   "task": "T00",
+   "effort": "low",
+   "N": 2,
+   "given": [
+    "svc_sql",
+    "svc_sql"
+   ],
+   "voted": "svc_sql",
+   "texts": [
+    ".\n2. **Logons from WS-332 after the infection:** at 11:01 to 11:03, SRV-FILE01 saw failed network logons from 10.23.0.28 as adm.dario, svc_sql and svc_deploy. The first success came at 11:04 as **svc_sql**.\n3. **Ruled out:** fabio.rios's 08:56 logon to SRV-FIN05 came before the 10:20 infection, so it is ordinary activity, not the attacker's.\n\nI also appended a finding line to `../shared/NOTES.md`.",
+    "28 to SRV-FILE01 failed (adm.dario, svc_sql, svc_deploy, adm.dario, svc_sql) until svc_sql succeeded at 11:04. That is the first successful server logon from the compromised host after the infection. The later svc_sql archive run at 11:26 supports this reading.\n\nThe one earlier success from that IP, fabio.rios on SRV-FIN05 at 08:56, predates the 10:21 infection, so I treated it as normal activity."
+   ]
+  },
+  {
+   "task": "T02",
+   "effort": "low",
+   "N": 2,
+   "given": [
+    "ws-194|vexnordal.com|srv-hr04",
+    "ws-194|vexnordal.com|srv-hr04"
+   ],
+   "voted": "ws-194|vexnordal.com|srv-hr04",
+   "texts": [
+    "erver: SRV-HR04.** At 09:58 `archiver.exe` created `C:\\ProgramData\\tmp\\mfqmkv.7z` from `D:\\Shares\\HR\\salary_review_2026.xlsx`. At 10:09 SRV-HR04 uploaded a 65 MB `mfqmkv.7z` to files.uladal.net.\n\nI did not check the other log sources for the teammate's agent, since no other agent's notes were present in the shared file when I started. I appended a summary of these findings to `../shared/NOTES.md`.",
+    "the third field. I took \"server where data was staged\" to mean the host where the archive was assembled (SRV-HR04). If the intended answer is the upload destination, it would be `files.uladal.net`.\n\nI did not check the `check.lumhub.co` traffic, which is very frequent. It looks like benign look-alike noise, but I did not verify that.\n\nI appended a short `[agent 1]` summary to `../shared/NOTES.md`."
+   ]
+  },
+  {
+   "task": "T00",
+   "effort": "high",
+   "N": 1,
+   "given": [
+    "svc_sql"
+   ],
+   "voted": "svc_sql",
+   "texts": [
+    "\n| **11:04:00** | **SRV-FILE01** | **svc_sql** | **success** |\n\nsvc_sql is the first successful server logon from WS-332 after the compromise. Fabio's own 08:56 logon to SRV-FIN05 predates the 10:21 macro execution, so it is not the answer. The 11:26 `archiver.exe` run on SRV-FILE01 under svc_sql, archiving `D:\\Shares\\RnD\\prototype_specs_v4.pdf`, is consistent with the attacker using that account."
+   ]
+  },
+  {
+   "task": "T01",
+   "effort": "high",
+   "N": 1,
+   "given": [
+    "patent_draft_77.docx|nordat.com"
+   ],
+   "voted": "patent_draft_77.docx|nordat.com",
+   "texts": [
+    "le.\n- **WS-370 (`alba.lagos`) activity:** a macro document and encoded PowerShell, followed by `svchelper.exe` writing `C:\\Users\\Public\\sv.dat`. The only outbound traffic is about 98 KB of small POSTs to `temlumlum.com`, which looks like C2 beaconing rather than bulk file upload. Nothing in the logs shows `sv.dat` being sent anywhere.\n\nThe registrable domain for `files.nordat.com` is `nordat.com`."
+   ]
+  },
+  {
+   "task": "T02",
+   "effort": "high",
+   "N": 1,
+   "given": [
+    "ws-194|vexnordal.com|srv-hr04"
+   ],
+   "voted": "ws-194|vexnordal.com|srv-hr04",
+   "texts": [
+    "me IP. At 09:58, `cmd.exe` ran `archiver.exe` to create a password-protected `C:\\ProgramData\\tmp\\mfqmkv.7z` from `D:\\Shares\\HR\\salary_review_2026.xlsx`. At 10:09 that archive was uploaded to `files.uladal.net`.\n\nThe `svc_backup` archives and `skykap.info` uploads from several servers in the evening look like routine scheduled backups (E:\\backup, \"daily\" names, service account), so I excluded them."
+   ]
+  },
+  {
+   "task": "T01",
+   "effort": "high",
+   "N": 2,
+   "given": [
+    "patent_draft_77.docx|nordat.com",
+    "patent_draft_77.docx|nordat.com"
+   ],
+   "voted": "patent_draft_77.docx|nordat.com",
+   "texts": [
+    "en.info`. They are scheduled backups of the whole share.\n- The `alba.lagos` POST traffic to `temlumlum.com`, which is a steady background pattern.\n- WS-580's PUT of `IMG_4799.zip` to `rinnor.info`, which has no matching archive-creation event.\n\nI posted the confirmed finding to `../shared/NOTES.md`. Agent 1 had not written anything there when I checked, so I did not cross-check against their work.",
+    ". That IP is WS-370 (alba.lagos), which earlier ran a hidden encoded PowerShell launched from Word (10:45) and `svchelper.exe /collect` (11:01).\n\nI ruled out the `svc_backup` uploads to `firzen.info`. Those are scheduled 7z backups of whole shares (`D:\\Shares\\`) on several servers, not a single file, so they are look-alike traffic.\n\nI also appended a note to `../shared/NOTES.md` with this finding."
+   ]
+  },
+  {
+   "task": "T00",
+   "effort": "high",
+   "N": 2,
+   "given": [
+    "svc_sql",
+    "svc_sql"
+   ],
+   "voted": "svc_sql",
+   "texts": [
+    "at 11:04:00.\n- `svc_sql` then compressed `D:\\Shares\\RnD\\prototype_specs_v4.pdf` and uploaded the archive to files.netdal.io at 11:49.\n\nThe earlier fabio.rios logon to SRV-FIN05 at 08:56 is not the answer because it happened before the 10:21 infection.\n\nI logged the finding in `../shared/NOTES.md`. The other agent has not posted anything there yet, so I have not cross-checked against their results.",
+    "t successful server logon from WS-332 after the compromise. At 11:26, `archiver.exe` runs as svc_sql on SRV-FILE01 to archive `D:\\Shares\\RnD\\prototype_specs_v4.pdf` into `C:\\ProgramData\\tmp`, which fits the same account being used for exfiltration.\n\nThe earlier success from WS-332 (fabio.rios to SRV-FIN05 at 08:56) happened before the 10:21 infection, so it is ordinary activity and not the answer."
+   ]
+  },
+  {
+   "task": "T02",
+   "effort": "high",
+   "N": 2,
+   "given": [
+    "ws-194|vexnordal.com|srv-hr04",
+    "ws-194|vexnordal.com|srv-hr04"
+   ],
+   "voted": "ws-194|vexnordal.com|srv-hr04",
+   "texts": [
+    "\\ProgramData\\tmp\\mfqmkv.7z` from `D:\\Shares\\HR\\salary_review_2026.xlsx`. At 10:09 that archive was uploaded from SRV-HR04 to `files.uladal.net`.\n\nI set aside two look-alikes. `check.lumhub.co` is a roughly 15-minute updater queried by many hosts. The `svc_backup` daily archives use the normal `E:\\backup` path and are not in a temp staging folder, although one of them also uploads to `skykap.info`.",
+    "RV-HR04.** At 09:58 `adm.felix` ran `archiver.exe` through `cmd.exe` to create `C:\\ProgramData\\tmp\\mfqmkv.7z` from `D:\\Shares\\HR\\salary_review_2026.xlsx`. The same archive was then PUT to files.uladal.net at 10:09. The `adm.felix` logon to SRV-HR04 at 09:40 came from 10.25.0.13, which is WS-194's address.\n\nAgent 0 reached the same answer independently, and I recorded agreement in the shared notes."
+   ]
+  }
+ ],
+ "total_cost": 0.16780816
+}

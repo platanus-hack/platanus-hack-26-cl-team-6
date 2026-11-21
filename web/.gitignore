@@ -1,0 +1,18 @@
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+# Generated
+next-env.d.ts
+
+# Next.js defaults (root .gitignore already covers node_modules, .next, out, build, .env*, logs)
+/coverage
+.pnp
+.pnp.*
+.yarn/*
+*.pem
+*.tsbuildinfo
