@@ -1,4 +1,6 @@
 Claim Ledger
+
+
 Cuando agentes de IA se pasan información, una mentira llega al informe final sin que nadie la vea. Nosotros la atrapamos y decimos qué agente la dijo.
 
 El problema
