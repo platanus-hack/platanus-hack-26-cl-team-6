@@ -1,12 +1,13 @@
 import { HeroFans } from "./hero-fans";
+import { LiveTranscript } from "./live-transcript";
 import { ParticleField } from "./particle-field";
 
 const REPO = "https://github.com/platanus-hack/platanus-hack-26-cl-team-6";
 
 const NAV = [
-  { href: "#attack", label: "Attack" },
-  { href: "#defense", label: "Defense" },
-  { href: "#general", label: "General" },
+  { href: "#results", label: "Results" },
+  { href: "#method", label: "Method" },
+  { href: "#limits", label: "Limits" },
 ];
 
 export function SiteHeader() {
@@ -15,7 +16,8 @@ export function SiteHeader() {
       <div className="flex h-14 items-center justify-between gap-6 px-6 md:px-12 lg:px-20">
         <a
           href="#top"
-          className="flex items-center gap-2.5 text-sm font-semibold text-white"
+          aria-label="Jev, back to top"
+          className="flex items-center"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -25,7 +27,6 @@ export function SiteHeader() {
             height={22}
             className="rounded-[5px]"
           />
-          Swarm λ
         </a>
         <nav className="flex items-center gap-5 text-sm text-white/60 md:gap-8">
           {NAV.map((n) => (
@@ -55,7 +56,7 @@ export function Hero() {
   return (
     <section
       id="top"
-      className="relative flex h-[min(78vh,820px)] min-h-[560px] items-center justify-center overflow-hidden bg-black"
+      className="relative flex min-h-[calc(100svh-3.5rem)] flex-col items-center overflow-hidden bg-black px-4 pt-40 pb-20 md:pt-56"
     >
       <HeroFans />
       {/* Hairlines across the centre band, as in the reference slide. */}
@@ -63,15 +64,11 @@ export function Hero() {
       <div className="pointer-events-none absolute inset-x-0 top-[52%] h-px bg-white/[0.07]" />
       <div className="pointer-events-none absolute inset-x-0 top-[66%] h-px bg-white/[0.07]" />
 
-      <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center gap-6 px-20 text-center md:px-6">
-        <h1 className="text-4xl leading-[1.02] font-light tracking-[-0.035em] text-white animate-in fade-in slide-in-from-bottom-4 duration-1000 md:text-6xl lg:text-7xl">
-          How far does a swarm of agents get on security work?
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center gap-12 text-center md:gap-14">
+        <h1 className="max-w-3xl px-12 text-4xl leading-[1.02] font-light tracking-[-0.035em] text-white animate-in fade-in slide-in-from-bottom-4 duration-1000 md:px-0 md:text-6xl lg:text-7xl">
+          Can one model catch a swarm’s mistakes as they happen?
         </h1>
-        <p className="max-w-md text-sm leading-relaxed text-white/75 animate-in fade-in slide-in-from-bottom-2 delay-300 duration-1000 fill-mode-backwards md:text-base">
-          We measure Toby Ord&apos;s swarm exponent λ: N agents perform like one
-          agent thinking N<sup>λ</sup> times longer. Attack on the left, defense
-          on the right.
-        </p>
+        <LiveTranscript />
       </div>
     </section>
   );
@@ -83,12 +80,12 @@ export function SiteFooter() {
       <div className="relative h-[440px] md:h-[520px]">
         <ParticleField className="absolute inset-0 h-full w-full" />
         <p className="absolute bottom-10 left-6 z-10 max-w-sm text-4xl leading-[1.05] font-medium tracking-[-0.03em] text-white md:left-12 md:text-5xl lg:left-20">
-          Sixteen agents, one agent thinking ~5× longer.
+          30 of 36 planted errors, caught live.
         </p>
       </div>
       <div className="flex flex-col gap-3 border-t border-white/10 px-6 py-6 text-xs text-white/45 md:flex-row md:items-center md:justify-between md:px-12 lg:px-20">
         <span>
-          SEC-Bench Pro, λ = 0.57: 16<sup>0.57</sup> ≈ 4.8. Measured data only.
+          Hard set, threshold 0.85: 83% recall, 79% precision, $0.027 per 100 messages.
         </span>
         <span className="flex items-center gap-4">
           <span>Platanus Hack 26 · Team 6 · Next.js on Cloudflare Workers</span>

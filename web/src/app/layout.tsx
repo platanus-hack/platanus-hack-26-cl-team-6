@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Team 6 · Platanus Hack 26",
-  description: "Hello world on Cloudflare Workers",
+  title: "Jev · catching swarm mistakes live",
+  description: "Jev monitors a five-agent research swarm and flags fabricated and unverified claims as they appear.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

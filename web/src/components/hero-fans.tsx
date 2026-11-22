@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef } from "react";
-import { TASKS } from "@/data/swarm";
 import { mulberry32, useCanvasAnimation } from "./use-animation";
 
 const COLORS = [
@@ -22,7 +21,6 @@ type Curve = {
   phase: number;
   speed: number;
 };
-type Label = { y: number; text: string };
 
 function makeCurves(seed: number, count: number): Curve[] {
   const r = mulberry32(seed);
@@ -41,31 +39,10 @@ function makeCurves(seed: number, count: number): Curve[] {
 const LEFT = makeCurves(7, 90);
 const RIGHT = makeCurves(11, 90);
 
-const fmt = (l: number) =>
-  (l < 0 ? "−" : "") + (Math.round(Math.abs(l) * 100 + 1e-6) / 100).toFixed(2);
-const kTokens = (t: number) => `${Math.round(t / 1e3)}K`;
-const lastTokens = (id: string) => {
-  const task = TASKS.find((x) => x.id === id)!;
-  const big = [...task.series].sort((a, b) => b.agents - a.agents)[0];
-  return { lambda: task.lambda, tokens: big.points[big.points.length - 1][0] };
-};
-const ATTACK = lastTokens("secbench");
-const DEFENSE = lastTokens("soc");
-// Left strip = attack (SEC-Bench Pro), right strip = defense (SOC pilot).
-const LEFT_LABELS: Label[] = [
-  { y: 0.27, text: `λ ${fmt(ATTACK.lambda)}` },
-  { y: 0.76, text: kTokens(ATTACK.tokens) },
-];
-const RIGHT_LABELS: Label[] = [
-  { y: 0.33, text: `λ ${fmt(DEFENSE.lambda)}` },
-  { y: 0.68, text: kTokens(DEFENSE.tokens) },
-];
-
 function draw(ctx: CanvasRenderingContext2D, w: number, h: number, t: number) {
   const strip = Math.max(56, Math.min(w * 0.13, 220));
-  const font = getComputedStyle(document.body).fontFamily;
 
-  const side = (curves: Curve[], labels: Label[], dir: 1 | -1) => {
+  const side = (curves: Curve[], dir: 1 | -1) => {
     const x0 = dir === 1 ? w - strip : 0;
     const fx = dir === 1 ? x0 + 4 : strip - 4; // focal point on the strip's inner edge
     const fy = h * 0.52;
@@ -97,33 +74,11 @@ function draw(ctx: CanvasRenderingContext2D, w: number, h: number, t: number) {
     ctx.globalCompositeOperation = "source-over";
     ctx.globalAlpha = 1;
 
-    // Dashed guide arc, gently swaying.
-    const gx = fx + dir * strip * (0.55 + 0.03 * Math.sin(t * 0.4));
-    ctx.setLineDash([5, 6]);
-    ctx.strokeStyle = "rgba(255,255,255,0.45)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(gx + dir * 14, 0);
-    ctx.quadraticCurveTo(gx - dir * 10, h * 0.5, gx + dir * 14, h);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Data labels with square markers, sitting on the guide.
-    ctx.font = `500 15px ${font}`;
-    ctx.textBaseline = "middle";
-    for (const l of labels) {
-      const y = h * l.y;
-      const u = l.y; // position along the guide (quadratic, ends at +14, control at -10)
-      const lx = gx + dir * (14 * (1 - 2 * u * (1 - u)) - 20 * u * (1 - u));
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(lx - 2, y + 5, 4, 4);
-      ctx.fillText(l.text, lx + 6, y - 2);
-    }
     ctx.restore();
   };
 
-  side(LEFT, LEFT_LABELS, -1);
-  side(RIGHT, RIGHT_LABELS, 1);
+  side(LEFT, -1);
+  side(RIGHT, 1);
 }
 
 export function HeroFans() {
@@ -131,6 +86,6 @@ export function HeroFans() {
   useCanvasAnimation(ref, draw);
 
   return (
-    <canvas ref={ref} aria-hidden className="absolute inset-0 h-full w-full" />
+    <canvas ref={ref} aria-hidden className="absolute inset-0 hidden h-full w-full md:block" />
   );
 }
