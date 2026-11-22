@@ -16,16 +16,16 @@ export function SiteHeader() {
       <div className="flex h-14 items-center justify-between gap-6 px-6 md:px-12 lg:px-20">
         <a
           href="#top"
-          aria-label="Jev, back to top"
+          aria-label="SwarmWatch, back to top"
           className="flex items-center"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/icon.svg"
+            src="/logo.svg"
             alt=""
-            width={28}
-            height={28}
-            className="rounded-[6px]"
+            width={124}
+            height={22}
+            className="h-[22px] w-auto"
           />
         </a>
         <nav className="flex items-center gap-5 text-sm text-white/60 md:gap-8">

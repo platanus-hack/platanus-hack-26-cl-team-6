@@ -1,4 +1,5 @@
 import { ChartPlaceholder } from "@/components/chart-placeholder";
+import { SwarmSim } from "@/components/swarm-sim";
 import { SETS, type JevSet } from "@/data/jev";
 import { Hero, SiteFooter, SiteHeader } from "@/components/site-chrome";
 
@@ -152,6 +153,11 @@ export default function Home() {
               </li>
             ))}
           </ol>
+        </section>
+
+        <section id="swarm" className="flex scroll-mt-20 flex-col gap-8">
+          <SectionHeader label="At swarm scale" hint="Dummy data · 48 agents" />
+          <SwarmSim />
         </section>
 
         <div
