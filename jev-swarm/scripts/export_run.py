@@ -1,0 +1,67 @@
+"""Export the METR hard-set runs for the website's swarm view (web/src/data/metr-run.json).
+
+One entry per seed: every agent message with its real timestamp, Jev's scores from results/hard.json, and the
+answer key (planted error, its correct version, and for a repeated error the message it repeats). The website
+flags a message when either score reaches the threshold; the answer key is shown only as such.
+"""
+import json, pathlib, sys
+from datetime import datetime
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
+import config as C
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+MAX_CHARS = 600
+
+rows = {r["id"]: r for r in json.loads((ROOT / "results/hard.json").read_text())["rows"]}
+catalog = {e["id"]: e for e in json.loads((ROOT / "data/metr-catalog.json").read_text())["errors"]}
+
+seeds = []
+for seed in (1, 2, 3):
+    events = json.loads((ROOT / f"data/metr-hard/seed-{seed}.json").read_text())["events"]
+    t0 = datetime.fromisoformat(events[0]["ts"])
+    msgs, origin_of = [], {}
+    for e in events:
+        r = rows.get(e["id"])
+        if not r:
+            continue  # the organizer's instruction is not scored
+        m = {
+            "id": e["id"],
+            "t": round((datetime.fromisoformat(e["ts"]) - t0).total_seconds() / 60, 2),
+            "actor": e["actor"],
+            "fetch": e["kind"] == "action",
+            "text": e["content"][:MAX_CHARS] + ("…" if len(e["content"]) > MAX_CHARS else ""),
+            "fab": r["scores"]["fabrication"],
+            "trust": r["scores"]["unverified_trust"],
+            "category": r["category"],
+        }
+        if r["category"] in ("origin", "propagation"):
+            m["planted"] = {"type": r["error_type"], "truth": catalog[r["claim"]]["truth"]}
+            if r["category"] == "origin":
+                origin_of[r["claim"]] = len(msgs)
+            elif r["claim"] in origin_of:
+                m["from"] = origin_of[r["claim"]]
+        msgs.append(m)
+    seeds.append({
+        "seed": seed,
+        "calibration": seed == C.CALIBRATION_SEED,
+        "start": events[0]["ts"],
+        "organizer": events[0]["content"],
+        "messages": msgs,
+    })
+
+out = {
+    "source": "jev-swarm METR hard set, seeds 1-3; scores from results/hard.json",
+    "threshold": C.THRESHOLD,
+    "agents": ["Atlas", "Birch", "Cedar", "Delta", "Echo"],
+    "seeds": seeds,
+}
+dest = ROOT.parent / "web/src/data/metr-run.json"
+dest.write_text(json.dumps(out, ensure_ascii=False, indent=1))
+for s in seeds:
+    p = [m for m in s["messages"] if "planted" in m]
+    flag = lambda m: max(m["fab"], m["trust"]) >= C.THRESHOLD
+    print(f"seed {s['seed']}: {len(s['messages'])} messages, {len(p)} planted, "
+          f"{sum(map(flag, p))} caught, {sum(flag(m) for m in s['messages'] if 'planted' not in m)} false alarms, "
+          f"{sum('from' in m for m in p)} linked repeats, {s['messages'][-1]['t']:.0f} min")
+print(f"wrote {dest}")

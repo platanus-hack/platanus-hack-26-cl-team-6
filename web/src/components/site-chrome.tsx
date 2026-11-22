@@ -6,8 +6,6 @@ const REPO = "https://github.com/platanus-hack/platanus-hack-26-cl-team-6";
 
 const NAV = [
   { href: "#method", label: "Method" },
-  { href: "#results", label: "Results" },
-  { href: "#limits", label: "Limits" },
 ];
 
 export function SiteHeader() {

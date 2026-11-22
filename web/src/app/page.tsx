@@ -1,9 +1,5 @@
-import { ChartPlaceholder } from "@/components/chart-placeholder";
 import { SwarmSim } from "@/components/swarm-sim";
-import { SETS, type JevSet } from "@/data/jev";
 import { Hero, SiteFooter, SiteHeader } from "@/components/site-chrome";
-
-const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 function SectionHeader({ label, hint }: { label: string; hint: string }) {
   return (
@@ -13,40 +9,6 @@ function SectionHeader({ label, hint }: { label: string; hint: string }) {
       </h2>
       <span className="text-right text-xs text-white/40">{hint}</span>
     </header>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-3xl font-light tracking-[-0.03em] text-white">
-        {value}
-      </span>
-      <span className="text-xs text-white/45">{label}</span>
-    </div>
-  );
-}
-
-function Column({ set }: { set: JevSet }) {
-  return (
-    <section className="flex min-w-0 flex-col gap-8">
-      <SectionHeader label={set.label} hint={set.hint} />
-      <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-        <Stat
-          value={`${set.caught}/${set.errors}`}
-          label="planted errors caught"
-        />
-        <Stat
-          value={`${set.falseAlarms}`}
-          label={`false alarms of ${set.clean} clean`}
-        />
-        <Stat value={pct(set.precision)} label="precision" />
-        <Stat value={`$${set.costPer100.toFixed(3)}`} label="per 100 messages" />
-      </div>
-      {set.charts.map((c) => (
-        <ChartPlaceholder key={c.kicker} kicker={c.kicker} title={c.title} />
-      ))}
-    </section>
   );
 }
 
@@ -122,14 +84,6 @@ const STEPS = [
   },
 ];
 
-const NOTES = [
-  "Every numeric error is caught. Most misses are textual errors inside multi-claim paragraphs, such as an invented ending for a quote that was cut off.",
-  "Most false alarms are correct multi-claim drafts, and true statements about paraphrases or ranges.",
-  "Errors repeated without credit are the hardest: 40% recall on the hard set.",
-  "The ledger is rebuilt on every fresh run and is not deterministic, so expect about ±5 points between runs.",
-  "The threshold was picked on seed 1 of the hard set. Nothing was tuned on the easy set.",
-];
-
 export default function Home() {
   return (
     <>
@@ -156,35 +110,8 @@ export default function Home() {
         </section>
 
         <section id="swarm" className="flex scroll-mt-20 flex-col gap-8">
-          <SectionHeader label="At swarm scale" hint="Dummy data · 48 agents" />
+          <SectionHeader label="A real run" hint="METR hard set · 5 agents" />
           <SwarmSim />
-        </section>
-
-        <div
-          id="results"
-          className="grid scroll-mt-20 grid-cols-1 gap-16 md:grid-cols-2 md:gap-12"
-        >
-          {SETS.map((s) => (
-            <Column key={s.id} set={s} />
-          ))}
-        </div>
-
-
-        <section id="limits" className="flex scroll-mt-20 flex-col gap-8">
-          <SectionHeader
-            label="What it misses"
-            hint="Seeds 2–3, threshold 0.85"
-          />
-          <ul className="grid grid-cols-1 gap-x-12 gap-y-4 md:grid-cols-2">
-            {NOTES.map((n) => (
-              <li
-                key={n}
-                className="border-l border-white/15 pl-4 text-sm leading-relaxed text-white/60"
-              >
-                {n}
-              </li>
-            ))}
-          </ul>
         </section>
       </main>
       <SiteFooter />
