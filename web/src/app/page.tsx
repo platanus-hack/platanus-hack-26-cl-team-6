@@ -51,20 +51,16 @@ function Column({ set }: { set: JevSet }) {
 
 const STEPS = [
   {
-    title: "A swarm writes a briefing",
-    body: "Five agents (Atlas, Birch, Cedar, Delta, Echo) summarise the interview quotes in METR's November 2026 assessment of Anthropic. Atlas fetches the source; the others mostly work from Atlas's excerpts and each other's notes.",
+    title: "A small hallucination can multiply",
+    body: "When AI agents work together, usually only one reads the source and the others trust it. If it gets a number or a quote wrong, the others repeat it, and the hallucination ends up in the final result.",
   },
   {
-    title: "We plant 36 errors",
-    body: "Wrong numbers, wrong attributions, invented quote endings, and agents repeating each other's mistakes as fact. Twelve numeric, twelve textual, twelve mixed, each with a known correct version.",
+    title: "Two models watch the conversation",
+    body: "We add two models that follow the chat as it happens. Every 20 messages, a language model takes notes on who said what and what the source actually says. Only the source counts as true; anything an agent claims is marked as not yet checked. A decision model uses these notes to review each new message. It asks: is this message making something up? Is it treating something unchecked as true? If it's confident the answer is yes, it flags the message.",
   },
   {
-    title: "Jev scores every message live",
-    body: "As each message arrives, Jev rates it on fabrication and unverified trust, seeing only earlier messages. A message is flagged when either score reaches 0.85.",
-  },
-  {
-    title: "Haiku keeps the ledger",
-    body: "Every 20 messages, Haiku updates a running record of who claimed what, plus the facts from the fetched source. That ledger goes into Jev's context.",
+    title: "Hallucinations are caught before they spread",
+    body: "The decision model flags a hallucination as soon as it appears, so it can be fixed before other agents repeat it. To test this, we wrote agent conversations with planted hallucinations: changed numbers, quotes credited to the wrong person and quotes with invented endings. Because we know where each hallucination is, we can check which ones the decision model catches. We ran the test with five agents summarizing a METR report on Anthropic.",
   },
 ];
 
@@ -93,7 +89,7 @@ export default function Home() {
 
         <section id="method" className="flex scroll-mt-20 flex-col gap-8">
           <SectionHeader label="How it works" hint="Three seeds per set" />
-          <ol className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="grid grid-cols-1 gap-10 md:grid-cols-3">
             {STEPS.map((s, i) => (
               <li key={s.title} className="flex flex-col gap-3">
                 <span className="font-mono text-xs text-white/35">
