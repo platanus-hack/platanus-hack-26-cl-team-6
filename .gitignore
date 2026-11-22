@@ -31,3 +31,8 @@ pnpm-debug.log*
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# AI Village data (research-only terms, do not redistribute)
+jev-swarm/data/swarm-village/
+jev-swarm/data/swarm-village-run/
+jev-swarm/results/swarm.*

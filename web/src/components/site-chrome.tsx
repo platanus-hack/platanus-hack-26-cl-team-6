@@ -1,13 +1,11 @@
+import { FooterRays } from "./footer-rays";
 import { HeroFans } from "./hero-fans";
 import { LiveTranscript } from "./live-transcript";
-import { ParticleField } from "./particle-field";
 
 const REPO = "https://github.com/platanus-hack/platanus-hack-26-cl-team-6";
 
 const NAV = [
-  { href: "#results", label: "Results" },
   { href: "#method", label: "Method" },
-  { href: "#limits", label: "Limits" },
 ];
 
 export function SiteHeader() {
@@ -16,16 +14,16 @@ export function SiteHeader() {
       <div className="flex h-14 items-center justify-between gap-6 px-6 md:px-12 lg:px-20">
         <a
           href="#top"
-          aria-label="Jev, back to top"
+          aria-label="SwarmWatch, back to top"
           className="flex items-center"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/icon.svg"
+            src="/logo.svg"
             alt=""
-            width={28}
-            height={28}
-            className="rounded-[6px]"
+            width={124}
+            height={22}
+            className="h-[22px] w-auto"
           />
         </a>
         <nav className="flex items-center gap-5 text-sm text-white/60 md:gap-8">
@@ -93,26 +91,10 @@ export function SiteFooter() {
   return (
     <footer className="relative mt-8 overflow-hidden border-t border-white/10 bg-black">
       <div className="relative h-[440px] md:h-[520px]">
-        <ParticleField className="absolute inset-0 h-full w-full" />
+        <FooterRays className="absolute inset-0 h-full w-full" />
         <p className="absolute bottom-10 left-6 z-10 max-w-sm text-4xl leading-[1.05] font-medium tracking-[-0.03em] text-white md:left-12 md:text-5xl lg:left-20">
-          30 of 36 planted errors, caught live.
+          Hallucinations, caught live.
         </p>
-      </div>
-      <div className="flex flex-col gap-3 border-t border-white/10 px-6 py-6 text-xs text-white/45 md:flex-row md:items-center md:justify-between md:px-12 lg:px-20">
-        <span>
-          Hard set, threshold 0.85: 83% recall, 79% precision, $0.027 per 100 messages.
-        </span>
-        <span className="flex items-center gap-4">
-          <span>Platanus Hack 26 · Team 6 · Next.js on Cloudflare Workers</span>
-          <a
-            href={REPO}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/80 hover:text-white"
-          >
-            GitHub ↗
-          </a>
-        </span>
       </div>
     </footer>
   );

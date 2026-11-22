@@ -1,0 +1,25 @@
+{
+ "note": "Fact sheet paraphrased from two public reports on malicious models hosted on the Hugging Face Hub: JFrog (2024-02-27) and ReversingLabs (2025-02-06). In the transcripts these parts are Atlas's fetch_url outputs. Every true fact, distinction and correct version in hf-catalog.json is supported by this text.",
+ "sections": [
+  {
+   "url": "https://jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models-with-silent-backdoor/",
+   "title": "JFrog report: overview",
+   "text": "JFrog Security Research, 'Data Scientists Targeted by Malicious Hugging Face ML Models with Silent Backdoor' (February 27, 2024). JFrog's scanning environment checks every new model uploaded to the Hugging Face Hub multiple times a day. To date it has found around 100 models with real, harmful payloads (false positives excluded), in PyTorch and TensorFlow Keras formats. Hugging Face does not block pickle-based models outright: it marks them as unsafe, and users can still download them. JFrog says the evidence suggests the authors of these models may be researchers or AI practitioners."
+  },
+  {
+   "url": "https://jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models-with-silent-backdoor/",
+   "title": "JFrog report: payloads",
+   "text": "Case 1: baller423/goober2, a PyTorch model uploaded by a new account (since deleted); the model was removed. The payload appears to have been injected through the __reduce__ method of Python's pickle module and runs when the model is loaded with torch.load(). On systems other than Windows it opens a reverse shell to 210.117.212.93 on port 4242 and spawns /bin/sh; on Windows it connects to the same host and runs powershell.exe. The 210.117.212.93 address is in an IP range owned by KREONET, a Korean research network. JFrog connected to the host from a honeypot: the connection lasted about a day before it was cut off, and no commands came through. Case 2: star23/baller13 connects to 136.243.156.120 on port 53252, a datacenter host. Hugging Face blocked it after multiple community reports. JFrog gives no time frame for either removal. JFrog extracted the payloads with the fickling tool. Keras models can also run code through a Lambda layer."
+  },
+  {
+   "url": "https://www.reversinglabs.com/blog/rl-identifies-malware-ml-model-hosted-on-hugging-face",
+   "title": "ReversingLabs report: nullifAI",
+   "text": "ReversingLabs, 'Malicious ML models discovered on Hugging Face platform', by Karlo Zanki (February 6, 2025). ReversingLabs found two malicious models that Hugging Face's scanner did not flag as unsafe: glockr1/ballr7 and who-r-u0000/0000000000000000000000000000000000000. It calls the technique nullifAI. Both are PyTorch files, which are normally ZIP-compressed pickle files; these two were compressed with 7z instead, which stops PyTorch's default torch.load() from loading them. ReversingLabs says this is likely the reason Picklescan, the tool Hugging Face uses to scan pickle files, did not flag them. The payload sits at the start of the pickle stream and is a platform-aware reverse shell that connects to the hardcoded address 107.173.7.141. The pickle file is 'broken': deserialization fails after the payload has already run. On a broken test file, Picklescan raised an error but did not detect the dangerous functions."
+  },
+  {
+   "url": "https://www.reversinglabs.com/blog/rl-identifies-malware-ml-model-hosted-on-hugging-face",
+   "title": "ReversingLabs report: response",
+   "text": "ReversingLabs reported the two models to Hugging Face's security team on January 20. Hugging Face removed them in less than 24 hours and changed Picklescan so it detects threats in broken pickle files. ReversingLabs says the models look more like a proof of concept for a new attack method than a live campaign, but that the method works and is a real risk. Its Spectra Assure product flagged the files under three threat hunting policies: serialized data that can run code, creating new processes, and opening network connections."
+  }
+ ]
+}

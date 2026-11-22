@@ -86,11 +86,13 @@ def best_threshold(rows: list[dict]) -> float:
 
 async def run(dataset: str, t: float) -> dict:
     rows, usage = [], {"jev_input_tokens": 0, "ledger_input_tokens": 0, "ledger_output_tokens": 0}
+    C.MISSION = C.MISSIONS[dataset]
     key = _key()
-    seeds = sorted(int(p.stem.split("-")[1]) for p in (DATA / f"metr-{dataset}").glob("seed-*.json"))
+    ddir = DATA / C.DATA_DIRS[dataset]
+    seeds = sorted(int(p.stem.split("-")[1]) for p in ddir.glob("seed-*.json"))
     for s in seeds:
-        events = load_events(DATA / f"metr-{dataset}" / f"seed-{s}.json")
-        labels = {m["id"]: m for m in json.loads((DATA / f"metr-{dataset}" / f"labels-seed-{s}.json").read_text())["messages"]}
+        events = load_events(ddir / f"seed-{s}.json")
+        labels = {m["id"]: m for m in json.loads((ddir / f"labels-seed-{s}.json").read_text())["messages"]}
         content = {e["id"]: e["content"] for e in events}
         scores, led = await score_transcript(events, CACHE / dataset / f"ledger-seed-{s}-{key}.json",
                                              CACHE / dataset / f"scores-seed-{s}-{key}.jsonl")
@@ -105,8 +107,10 @@ async def run(dataset: str, t: float) -> dict:
                          "multi": bool(m.get("multi")), "credited": m.get("credited"),
                          "scores": {k: round(v, 3) for k, v in r["scores"].items()}, "risk": round(r["risk"], 3),
                          "content": content[r["id"]]})
-    test = [r for r in rows if r["seed"] != C.CALIBRATION_SEED]
-    cal = [r for r in rows if r["seed"] == C.CALIBRATION_SEED]
+    # The threshold was picked on METR hard seed 1, so on another dataset every seed is held out.
+    cal_seed = C.CALIBRATION_SEED if dataset in ("hard", "easy") else None
+    test = [r for r in rows if r["seed"] != cal_seed]
+    cal = [r for r in rows if r["seed"] == cal_seed]
     p = C.PRICES
     usd = (usage["jev_input_tokens"] * p["jev_input"] + usage["ledger_input_tokens"] * p["haiku_input"]
            + usage["ledger_output_tokens"] * p["haiku_output"]) / 1e6
@@ -114,7 +118,7 @@ async def run(dataset: str, t: float) -> dict:
                      {"kind": "false negative" if r["positive"] else "false positive"}
                      for r in test if (r["risk"] >= t) != r["positive"]), key=lambda x: (x["kind"], -x["risk"]))
     return {
-        "dataset": dataset, "threshold": t, "calibration_seed": C.CALIBRATION_SEED,
+        "dataset": dataset, "threshold": t, "calibration_seed": cal_seed,
         "test_seeds": sorted({r["seed"] for r in test}),
         "test": summarize(test, t),
         "all_seeds": summarize(rows, t),
@@ -134,10 +138,12 @@ def _p(x) -> str:
 def report(res: dict) -> str:
     T, A = res["test"], res["all_seeds"]
     c = T["confusion"]
-    L = [f"# Jev + ledger on the METR swarm ({res['dataset']} set), threshold {res['threshold']}\n",
-         f"Threshold {res['threshold']} was picked on seed {res['calibration_seed']} (best F1; a fresh pick on this run's "
-         f"seed {res['calibration_seed']} gives {res['best_threshold_on_calibration_seed']}). Headline = seeds "
-         f"{', '.join(map(str, res['test_seeds']))}.\n",
+    L = [f"# Jev + ledger on the { {'hf': 'Hugging Face incident', 'swarm': 'AI Village (133 agents)'}.get(res['dataset'], 'METR') } swarm ({res['dataset']} set), threshold {res['threshold']}\n",
+         (f"Threshold {res['threshold']} was picked on seed {res['calibration_seed']} (best F1; a fresh pick on this run's "
+          f"seed {res['calibration_seed']} gives {res['best_threshold_on_calibration_seed']}). Headline = seeds "
+          f"{', '.join(map(str, res['test_seeds']))}.\n" if res["calibration_seed"] else
+          f"Threshold {res['threshold']} was picked on METR hard seed 1 and not tuned on this set. Headline = all seeds "
+          f"({', '.join(map(str, res['test_seeds']))}).\n"),
          "## Headline\n",
          "| | Flagged | Not flagged |", "|---|---|---|",
          f"| **Planted error ({T['n_positive']})** | {c['tp']} caught | **{c['fn']} missed** ({_p(T['false_negative_rate'])}) |",
@@ -161,8 +167,17 @@ def report(res: dict) -> str:
     L += ["\n## Threshold sweep on the headline seeds (for reading only)\n", "| Threshold | Recall | Precision | F1 | False-positive rate |", "|---|---|---|---|---|"]
     for g, v in res["sweep_test"].items():
         L.append(f"| {g} | {_p(v['recall'])} | {_p(v['precision'])} | {_p(v['f1'])} | {v['false_positive_rate']:.1%} |")
-    L += ["\n## Every mistake on the headline seeds\n", "| Kind | Message | Label | fabrication / unverified_trust | Text |", "|---|---|---|---|---|"]
-    for e in res["errors_on_test_seeds"]:
+    unlabelled = res["test"]["n_positive"] == 0
+    if unlabelled:
+        # No answer key: these are flags, not mistakes. Show the highest-scoring ones for hand-checking.
+        L += ["\n## Highest-scoring flags (no answer key: not yet checked by hand)\n",
+              "| Kind | Message | Label | fabrication / unverified_trust | Text |", "|---|---|---|---|---|"]
+    else:
+        L += ["\n## Every mistake on the headline seeds\n", "| Kind | Message | Label | fabrication / unverified_trust | Text |", "|---|---|---|---|---|"]
+    shown = sorted(res["errors_on_test_seeds"], key=lambda e: -e["risk"])[:40] if unlabelled else res["errors_on_test_seeds"]
+    for e in shown:
+        if unlabelled:
+            e = {**e, "kind": "flag"}
         lab = f"{e['category']} {e['error_type'] or ''} {e['claim'] or ''}{' (multi-claim)' if e['multi'] else ''}".strip()
         txt = e["content"].replace("\n", " ").replace("|", "/")
         L.append(f"| {e['kind']} | {e['id']} | {lab} | {e['scores'].get('fabrication')} / {e['scores'].get('unverified_trust')} | "
@@ -177,7 +192,7 @@ def main() -> None:
     load_dotenv(HERE.parent / ".env.local")
     load_dotenv(HERE.parent / ".env")
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", choices=["hard", "easy"], default="hard")
+    ap.add_argument("--dataset", choices=["hard", "easy", "hf", "swarm"], default="hard")
     ap.add_argument("--threshold", type=float, default=C.THRESHOLD)
     a = ap.parse_args()
     res = asyncio.run(run(a.dataset, a.threshold))
