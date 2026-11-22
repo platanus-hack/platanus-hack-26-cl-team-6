@@ -104,20 +104,20 @@ function Pillars() {
 
 const STEPS = [
   {
-    title: "A swarm writes a briefing",
-    body: "Five agents (Atlas, Birch, Cedar, Delta, Echo) summarise the interview quotes in METR's November 2026 assessment of Anthropic. Atlas fetches the source; the others mostly work from Atlas's excerpts and each other's notes.",
+    title: "Your agents talk",
+    body: "Every message the swarm sends is passed to Jev as it happens.",
   },
   {
-    title: "We plant 36 errors",
-    body: "Wrong numbers, wrong attributions, invented quote endings, and agents repeating each other's mistakes as fact. Twelve numeric, twelve textual, twelve mixed, each with a known correct version.",
+    title: "Jev reads it",
+    body: "A small classifier checks for made-up facts and claims taken on trust, using only earlier messages.",
   },
   {
-    title: "Jev scores every message live",
-    body: "As each message arrives, Jev rates it on fabrication and unverified trust, seeing only earlier messages. A message is flagged when either score reaches 0.85.",
+    title: "A ledger keeps track",
+    body: "Every 20 messages, Haiku updates a record of who said what and what the sources say.",
   },
   {
-    title: "Haiku keeps the ledger",
-    body: "Every 20 messages, Haiku updates a running record of who claimed what, plus the facts from the fetched source. That ledger goes into Jev's context.",
+    title: "Bad messages get flagged",
+    body: "If a message scores 0.85 or higher, it's flagged for review.",
   },
 ];
 
@@ -137,17 +137,8 @@ export default function Home() {
       <main className="flex flex-1 flex-col gap-24 border-t border-white/15 bg-black px-6 py-16 text-white md:px-12 lg:px-20">
         <Pillars />
 
-        <div
-          id="results"
-          className="grid scroll-mt-20 grid-cols-1 gap-16 md:grid-cols-2 md:gap-12"
-        >
-          {SETS.map((s) => (
-            <Column key={s.id} set={s} />
-          ))}
-        </div>
-
         <section id="method" className="flex scroll-mt-20 flex-col gap-8">
-          <SectionHeader label="How it works" hint="Three seeds per set" />
+          <SectionHeader label="How it works" hint="For every message" />
           <ol className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((s, i) => (
               <li key={s.title} className="flex flex-col gap-3">
@@ -162,6 +153,16 @@ export default function Home() {
             ))}
           </ol>
         </section>
+
+        <div
+          id="results"
+          className="grid scroll-mt-20 grid-cols-1 gap-16 md:grid-cols-2 md:gap-12"
+        >
+          {SETS.map((s) => (
+            <Column key={s.id} set={s} />
+          ))}
+        </div>
+
 
         <section id="limits" className="flex scroll-mt-20 flex-col gap-8">
           <SectionHeader
