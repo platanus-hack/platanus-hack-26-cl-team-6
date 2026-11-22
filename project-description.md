@@ -5,10 +5,9 @@ Usamos las notas reales de las entrevistas sobre aceleración (Investigadores A 
 Plantamos errores. El más importante: el Investigador B dijo 3x, pero un agente escribe 1.2x. También plantamos citas falsas, cifras cambiadas y cifras inventadas. Luego comparamos tres casos: sin registro, con el registro y con un juez LLM.
 
 Qué hay en el proyecto
-Experimento	Archivo	Qué muestra
-1. Lavado de afirmaciones	swarm.py	Cuántos errores plantados llegan al informe final, con y sin registro, y contra un juez LLM
+1. Lavado de afirmaciones:Cuántos errores plantados llegan al informe final, con y sin registro, y contra un juez LLM
 2. Degradación	degrade.py	Cómo se pierde información al pasar por 4, 8, 16 y 32 agentes
-3. Alarma de aceleración	meme.py, monitor.py	200 agentes votan si la IA acelera la investigación en IA más de 2x. Un meme falso ("B dijo solo 1.2x") puede apagar la alarma. El monitor encuentra al paciente cero.
+
 
 
 Resultados Reales (Claude Haiku 4.5, 2 preguntas × 5 corridas)
