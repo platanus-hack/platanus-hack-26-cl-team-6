@@ -76,7 +76,7 @@ const STEPS = [
   },
   {
     title: "Hallucinations are caught before they spread",
-    body: "The decision model flags a hallucination as soon as it appears, so it can be fixed before other agents repeat it. To test this, we wrote agent conversations with planted hallucinations: changed numbers, quotes credited to the wrong person and quotes with invented endings. Because we know where each hallucination is, we can check which ones the decision model catches. We ran the test with five agents summarizing a METR report on Anthropic.",
+    body: "The decision model flags a hallucination as soon as it appears, so it can be fixed before other agents repeat it. We tested it two ways. First, on conversations where we planted hallucinations ourselves: changed numbers, quotes credited to the wrong person and quotes with invented endings. Because we know where each one is, we can check which ones get caught. Then we ran it unchanged on a real swarm: 133 agents from AI Village talking for 24 hours, where it flagged 113 of 3,843 messages.",
   },
 ];
 
