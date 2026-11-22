@@ -1,22 +1,27 @@
-El escenario: entrevistas de METR
+SwarmWatch: alucinaciones de un enjambre, detectadas en vivo y a cualquier escala
 
-Usamos las notas reales de las entrevistas sobre aceleración (Investigadores A a L). Un enjambre de 4 agentes (investigador, redactor, revisor, sintetizador) responde: ¿quién dijo que Claude le dio 2x o más de productividad?
+El problema
 
-Plantamos errores. El más importante: el Investigador B dijo 3x, pero un agente escribe 1.2x. También plantamos citas falsas, cifras cambiadas y cifras inventadas. Luego comparamos tres casos: sin registro, con el registro y con un juez LLM.
+Cuando varios agentes de IA trabajan juntos, casi siempre uno solo lee la fuente y los demás confían en él. Si ese agente se equivoca en una cifra o en una cita, los demás la repiten y el error termina en el resultado final.
 
-Qué hay en el proyecto
-1. Lavado de afirmaciones:Cuántos errores plantados llegan al informe final, con y sin registro, y contra un juez LLM
-2. Degradación	degrade.py	Cómo se pierde información al pasar por 4, 8, 16 y 32 agentes
+Cómo funciona
 
+Dos modelos siguen la conversación mientras ocurre. Un modelo de lenguaje (Haiku) lleva un registro de quién dijo qué y de lo que dice realmente la fuente. Solo la fuente cuenta como verdad; lo que afirma un agente queda como "sin verificar". Un modelo de decisión usa ese registro para revisar cada mensaje apenas se publica, con dos preguntas: ¿este mensaje inventa algo? ¿trata como cierto algo que no se verificó? Si la puntuación llega a 0.85, marca el mensaje.
 
+Prueba 1: errores plantados (entrevistas de METR)
 
-Resultados Reales (Claude Haiku 4.5, 2 preguntas × 5 corridas)
+Cinco agentes escriben un informe sobre la sección de citas de entrevistas de la evaluación de METR sobre Anthropic. Plantamos errores: cifras cambiadas, citas atribuidas a la persona equivocada, citas con finales inventados y agentes que repiten los errores de otros como si fueran hechos. Como sabemos dónde está cada error, podemos medir cuáles se detectan.
 
-Errores plantados que llegaron a la respuesta: 17 de 35 sin registro y 0 de 35 con registro.
-Citas falsas: el juez LLM se dejó engañar en 3 de 5. El registro atrapó las 5 de 5.
-Falsas alarmas: 1 de 109 del registro y 10 de 109 del juez.
+Resultados (umbral 0.85, elegido en la semilla 1 y medido en las semillas 2 y 3):
+- Conjunto difícil: 30 de 36 errores detectados (83%), 8 falsas alarmas en 289 mensajes correctos (2.8%).
+- Conjunto fácil: 32 de 36 errores detectados (89%), 0 falsas alarmas en 81 mensajes correctos.
+- Todos los errores numéricos se detectan. La mayoría de los que se escapan son errores de texto dentro de párrafos con varias afirmaciones.
+- Costo: unos $0.03 por cada 100 mensajes, 28 veces más barato que usar Sonnet como juez. El costo por mensaje no crece con el tamaño del enjambre.
 
-Origen: el registro encontró al agente que inventó la cifra en 17 de 17 casos.
+Prueba 2: un enjambre real (AI Village)
 
-La muestra es chica. Quedan 20 marcas sin etiquetar que hay que revisar a mano.
+Corrimos el mismo sistema, sin cambiar nada, sobre 133 agentes de AI Village que conversaron durante 24 horas. Marcó 113 de 3.843 mensajes (2.9%), provenientes de 53 agentes.
 
+En la página
+
+Puedes ver el enjambre de AI Village con sus marcas, hacer clic en cualquier mensaje, reescribirlo y ver cómo el modelo lo vuelve a evaluar al instante.
