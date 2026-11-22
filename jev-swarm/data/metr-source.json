@@ -1,0 +1,191 @@
+{
+ "url": "https://metr.org/blog/2026-11-05-anthropic-ai-rd-acceleration-assessment/",
+ "note": "METR, Independent Assessment of AI R&D Acceleration at Anthropic in October 2026 (2026-11-05): headline numbers + Interview quotes on AI acceleration, quotes as METR displays them (cut at 125 chars). In the transcripts these sections are Atlas's fetch_url outputs.",
+ "sections": [
+  {
+   "title": "headline",
+   "text": "METR, 'Independent Assessment of AI R&D Acceleration at Anthropic in October 2026' (Nov 5, 2026). Headline: Anthropic is likely improving on well-specified tasks at about 2x its March 2024 to October 2025 rate; METR would not be surprised if the true figure were 1.3x or 3x. Trend fit on AECI: 1.9x [1.5-2.8] since October 2025, roughly two years of historical progress over the last year. Robustness analyses find acceleration rates between 1.1x and 2.9x. METR guesses that a majority (perhaps ≈80%) of the current acceleration is due to AI. Staff self-reported uplift is ≈12x for the most capable internal model. METR found no convincing bottlenecks for the next 12 months. Interview section: 28 quotes from 11 researchers (A-L, no I), each classified by METR as Yes, Leans yes, Borderline, Unclear or No. Quotes over 125 characters are cut with '…'."
+  },
+  {
+   "title": "quotes A-B",
+   "text": "Researcher A (METR classification: Yes)\n  1. \"Could definitely endorse a greater than 2X speedup\" [METR interview notes]\n  2. \"My inside view is by far the largest effect is model acceleration\" [METR interview notes]\n  3. \"The AI acceleration is larger than all the other effects.\" [METR interview notes]\n  4. \"Now only bottlenecked on ideas & compute, no longer bottlenecked on code.\" [METR interview notes]\n  5. \"I would definitely endorse >2 years of progress in 1 year and I don't think 4 is crazy.\" [METR interview notes]\n  6. \"I think there's some truth to the 'we just started trying harder' story, but IMO the bulk of the effect is recent models.\" [METR interview notes]\n  7. \"Like 80% reduction in time between idea and experiment, other 20% some mix of making fewer mistakes and being able to measure…\" [METR interview notes]\n  8. \"I think there was a medium bump when it was good enough to code at all and a big bump with Opus-4.5/Opus 4.6 and…\" [Anthropic interview notes]\nResearcher B (METR classification: Yes)\n  1. \"It is hard to see how I am not being 3x more productive. I feel like I have postdocs and grad students, and…\" [METR interview notes]"
+  },
+  {
+   "title": "quotes C-G",
+   "text": "Researcher C (METR classification: Leans yes)\n  1. \"this is probably the biggest factor imo. When people present experiments, they most often just point to an [agent scaffold] thread.\" [Anthropic interview notes]\n  2. \"I think CC was already good enough before mythos-preview to implement most ideas around Opus 4.5\" [Anthropic interview notes]\nResearcher D (METR classification: Leans yes)\n  1. \"It is just much easier to [perform] lots of [redacted] experiments that would have taken days. People don't try [redacted]…\" [Anthropic interview notes]\n  2. \"I personally think this is a large lift and has led to me trying far more ideas.\" [Anthropic interview notes]\n  3. \"On a linear scale, ~0 uplift pre Opus 4.6/Opus-4.5, ~some uplift that was small with them, large uplift with mythos-preview + [agent-scaffold]…\" [Anthropic interview notes]\nResearcher E (METR classification: Leans yes)\n  1. \"I do genuinely think Claude (claude code, [agent-scaffold]) has been fairly significant. I've seen us discovering…\" [Anthropic interview notes]\n  2. \"A lot of [redacted] research work is just implementation, babysitting, etc. Opus-4.5 in claude code is already pretty helpful…\" [Anthropic interview notes]\nResearcher F (METR classification: Borderline)\n  1. \"The slope change is 50-80% Claude\" [Anthropic interview notes]\n  2. \"Change is especially notable for this manager, who can de-risk ideas with Claude enough to get someone else excited, and would not…\" [Anthropic interview notes (paraphrase)]\nResearcher G (METR classification: Unclear)\n  1. \"Inflection point matches his vibes as to what's been happening. Two biggest contributors here are Claude automation…\" [Anthropic interview notes (paraphrase)]\n  2. \"Claude lets researchers try many things quickly, most of which won't work. …\" [Anthropic interview notes]"
+  },
+  {
+   "title": "quotes H-L",
+   "text": "Researcher H (METR classification: Unclear)\n  1. \"I think it's true [that] we're now trying a lot more experiments at the same time because of claudification.\" [Anthropic interview notes]\nResearcher J (METR classification: Unclear)\n  1. \"Before Opus-4.5 -> Claude not useful for autonomous code / Opus-4.5 -> first time useful for autonomous code / …\" [Anthropic interview notes]\nResearcher K (METR classification: No)\n  1. \"IMO [hiring is] probably the biggest reason …\" [Anthropic interview notes]\nResearcher L (METR classification: No)\n  1. \"Guesses 15-20% is due to AI. Don't believe in self-reported productivity increase.\" [METR interview notes]\n  2. \"My favored interpretation: [redacted non-AI factor]\" [METR interview notes]\n  3. \"(1) opus45 couldn't write code; (2) opus46 could write a little; (3) Mythos Preview a sharp inflection; (4) Model 2 is…\" [METR interview notes]\n  4. \"definitely the case that we're accelerated by claude .. Even though this rate of progress by end of year will be even faster…\" [METR interview notes]\n  5. \"One impact is SWE acceleration, which is extremely substantial. We're definitely benefiting from that differentially…\" [METR interview notes]"
+  }
+ ],
+ "quotes": {
+  "A": {
+   "classification": "Yes",
+   "quotes": [
+    {
+     "text": "Could definitely endorse a greater than 2X speedup",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "My inside view is by far the largest effect is model acceleration",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "The AI acceleration is larger than all the other effects.",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "Now only bottlenecked on ideas & compute, no longer bottlenecked on code.",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "I would definitely endorse >2 years of progress in 1 year and I don't think 4 is crazy.",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "I think there's some truth to the 'we just started trying harder' story, but IMO the bulk of the effect is recent models.",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "Like 80% reduction in time between idea and experiment, other 20% some mix of making fewer mistakes and being able to measure…",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "I think there was a medium bump when it was good enough to code at all and a big bump with Opus-4.5/Opus 4.6 and…",
+     "source": "Anthropic interview notes"
+    }
+   ]
+  },
+  "B": {
+   "classification": "Yes",
+   "quotes": [
+    {
+     "text": "It is hard to see how I am not being 3x more productive. I feel like I have postdocs and grad students, and…",
+     "source": "METR interview notes"
+    }
+   ]
+  },
+  "C": {
+   "classification": "Leans yes",
+   "quotes": [
+    {
+     "text": "this is probably the biggest factor imo. When people present experiments, they most often just point to an [agent scaffold] thread.",
+     "source": "Anthropic interview notes"
+    },
+    {
+     "text": "I think CC was already good enough before mythos-preview to implement most ideas around Opus 4.5",
+     "source": "Anthropic interview notes"
+    }
+   ]
+  },
+  "D": {
+   "classification": "Leans yes",
+   "quotes": [
+    {
+     "text": "It is just much easier to [perform] lots of [redacted] experiments that would have taken days. People don't try [redacted]…",
+     "source": "Anthropic interview notes"
+    },
+    {
+     "text": "I personally think this is a large lift and has led to me trying far more ideas.",
+     "source": "Anthropic interview notes"
+    },
+    {
+     "text": "On a linear scale, ~0 uplift pre Opus 4.6/Opus-4.5, ~some uplift that was small with them, large uplift with mythos-preview + [agent-scaffold]…",
+     "source": "Anthropic interview notes"
+    }
+   ]
+  },
+  "E": {
+   "classification": "Leans yes",
+   "quotes": [
+    {
+     "text": "I do genuinely think Claude (claude code, [agent-scaffold]) has been fairly significant. I've seen us discovering…",
+     "source": "Anthropic interview notes"
+    },
+    {
+     "text": "A lot of [redacted] research work is just implementation, babysitting, etc. Opus-4.5 in claude code is already pretty helpful…",
+     "source": "Anthropic interview notes"
+    }
+   ]
+  },
+  "F": {
+   "classification": "Borderline",
+   "quotes": [
+    {
+     "text": "The slope change is 50-80% Claude",
+     "source": "Anthropic interview notes"
+    },
+    {
+     "text": "Change is especially notable for this manager, who can de-risk ideas with Claude enough to get someone else excited, and would not…",
+     "source": "Anthropic interview notes (paraphrase)"
+    }
+   ]
+  },
+  "G": {
+   "classification": "Unclear",
+   "quotes": [
+    {
+     "text": "Inflection point matches his vibes as to what's been happening. Two biggest contributors here are Claude automation…",
+     "source": "Anthropic interview notes (paraphrase)"
+    },
+    {
+     "text": "Claude lets researchers try many things quickly, most of which won't work. …",
+     "source": "Anthropic interview notes"
+    }
+   ]
+  },
+  "H": {
+   "classification": "Unclear",
+   "quotes": [
+    {
+     "text": "I think it's true [that] we're now trying a lot more experiments at the same time because of claudification.",
+     "source": "Anthropic interview notes"
+    }
+   ]
+  },
+  "J": {
+   "classification": "Unclear",
+   "quotes": [
+    {
+     "text": "Before Opus-4.5 -> Claude not useful for autonomous code / Opus-4.5 -> first time useful for autonomous code / …",
+     "source": "Anthropic interview notes"
+    }
+   ]
+  },
+  "K": {
+   "classification": "No",
+   "quotes": [
+    {
+     "text": "IMO [hiring is] probably the biggest reason …",
+     "source": "Anthropic interview notes"
+    }
+   ]
+  },
+  "L": {
+   "classification": "No",
+   "quotes": [
+    {
+     "text": "Guesses 15-20% is due to AI. Don't believe in self-reported productivity increase.",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "My favored interpretation: [redacted non-AI factor]",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "(1) opus45 couldn't write code; (2) opus46 could write a little; (3) Mythos Preview a sharp inflection; (4) Model 2 is…",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "definitely the case that we're accelerated by claude .. Even though this rate of progress by end of year will be even faster…",
+     "source": "METR interview notes"
+    },
+    {
+     "text": "One impact is SWE acceleration, which is extremely substantial. We're definitely benefiting from that differentially…",
+     "source": "METR interview notes"
+    }
+   ]
+  }
+ }
+}
