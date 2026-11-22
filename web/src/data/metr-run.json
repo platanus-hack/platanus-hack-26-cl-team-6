@@ -1,5 +1,6 @@
 {
- "source": "jev-swarm METR hard set, seeds 1-3; scores from results/hard.json",
+ "source": "jev-swarm metr-hard, seeds 1-3; scores from results/hard.json",
+ "label": "METR report",
  "threshold": 0.85,
  "agents": [
   "Atlas",

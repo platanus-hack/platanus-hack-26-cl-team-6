@@ -110,7 +110,7 @@ export default function Home() {
         </section>
 
         <section id="swarm" className="flex scroll-mt-20 flex-col gap-8">
-          <SectionHeader label="A real run" hint="METR hard set · 5 agents" />
+          <SectionHeader label="Real runs" hint="5 agents · METR report and Hugging Face incident" />
           <SwarmSim />
         </section>
       </main>

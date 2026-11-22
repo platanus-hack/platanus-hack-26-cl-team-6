@@ -2,16 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCanvasAnimation } from "./use-animation";
-import run from "@/data/metr-run.json";
+import metrRun from "@/data/metr-run.json";
+import hfRun from "@/data/hf-run.json";
 
-// Real runs from the METR hard set (jev-swarm/scripts/export_run.py). Each dot
-// is one message, grouped by the agent that sent it. A message moves to the
+// Real runs (jev-swarm/scripts/export_run.py): the METR hard set, and the same
+// set re-made around the Hugging Face malicious-models incident
+// (jev-swarm/scripts/make_hf.py). Each dot is one message, grouped by the
+// agent that sent it. A message moves to the
 // Flagged cluster in the centre when either of Jev's real scores reaches the
 // threshold. Planted errors come from the answer key, which Jev never sees.
 
 const ORANGE = "#ff5a1f";
-const T = run.threshold;
-const AGENTS = run.agents;
+const T = metrRun.threshold;
+const AGENTS = metrRun.agents;
 const COLOR: Record<string, string> = {
   Atlas: "#2f6bff",
   Birch: "#1fd6a0",
@@ -21,7 +24,7 @@ const COLOR: Record<string, string> = {
 };
 const CENTER = AGENTS.length; // cluster index of "Flagged"
 
-type Raw = (typeof run.seeds)[number]["messages"][number];
+type Raw = (typeof metrRun.seeds)[number]["messages"][number];
 type Msg = Raw & {
   planted?: { type: string; truth: string };
   from?: number;
@@ -29,9 +32,29 @@ type Msg = Raw & {
   slot: number; // position inside its cluster, in arrival order
   cluster: number;
 };
-type Seed = { seed: number; calibration: boolean; start: string; msgs: Msg[]; length: number };
+type SetId = "metr" | "hf";
+type Seed = { set: SetId; seed: number; calibration: boolean; start: string; msgs: Msg[]; length: number };
 
-const SEEDS: Seed[] = run.seeds.map((s) => {
+const DATASETS: { id: SetId; label: string; run: typeof metrRun; order: number[]; intro: string; note: string }[] = [
+  {
+    id: "metr",
+    label: "METR report",
+    run: metrRun,
+    order: [2, 3, 1], // headline seeds first, calibration seed last
+    intro: "Atlas fetches the source. The others start pulling claims from it.",
+    note: "Five agents write a briefing on METR's AI R&D assessment, with 18 planted errors. *Seed 1 is where the 0.85 threshold was picked.",
+  },
+  {
+    id: "hf",
+    label: "Hugging Face incident",
+    run: hfRun as typeof metrRun,
+    order: [1, 2, 3],
+    intro: "Atlas fetches the JFrog and ReversingLabs reports. The others start pulling claims from them.",
+    note: "The same test, re-made around the malicious models found on the Hugging Face Hub (JFrog, 2024; ReversingLabs, 2025), with 18 planted errors per run. The threshold was not tuned on this set.",
+  },
+];
+
+const SEEDS: Seed[] = DATASETS.flatMap((d) => d.run.seeds.map((s) => {
   const used = Array(AGENTS.length + 1).fill(0);
   const msgs = (s.messages as Raw[]).map((m) => {
     const flagged = Math.max(m.fab, m.trust) >= T;
@@ -39,15 +62,18 @@ const SEEDS: Seed[] = run.seeds.map((s) => {
     return { ...m, flagged, cluster, slot: used[cluster]++ } as Msg;
   });
   return {
+    set: d.id,
     seed: s.seed,
     calibration: s.calibration,
     start: s.start,
     msgs,
     length: Math.ceil(msgs[msgs.length - 1].t + 2),
   };
-});
-// Headline seeds first, calibration seed last.
-const ORDER = [2, 3, 1].map((n) => SEEDS.findIndex((s) => s.seed === n));
+}));
+const ORDER = Object.fromEntries(
+  DATASETS.map((d) => [d.id, d.order.map((n) => SEEDS.findIndex((s) => s.set === d.id && s.seed === n))]),
+) as Record<SetId, number[]>;
+const dataset = (id: SetId) => DATASETS.find((d) => d.id === id)!;
 
 const SPEEDS = [
   { label: "Slow", v: 2 },
@@ -67,7 +93,7 @@ function clock(seed: Seed, minutes: number) {
 }
 
 function caption(seed: Seed, i?: number) {
-  if (i === undefined) return "Atlas fetches the source. The others start pulling claims from it.";
+  if (i === undefined) return dataset(seed.set).intro;
   const m = seed.msgs[i];
   if (!m.planted) return `${m.actor} was flagged on a correct message: a false alarm.`;
   if (m.from !== undefined)
@@ -151,19 +177,19 @@ const freshPos = (n: number) => Array.from({ length: n }, () => ({ x: 0, y: 0, p
 export function SwarmSim() {
   const ref = useRef<HTMLCanvasElement>(null);
   const sim = useRef<Sim>({
-    seed: ORDER[0],
+    seed: ORDER.metr[0],
     time: 0,
     playing: true,
     speed: SPEEDS[1].v,
     last: 0,
     shown: 0,
-    pos: freshPos(SEEDS[ORDER[0]].msgs.length),
+    pos: freshPos(SEEDS[ORDER.metr[0]].msgs.length),
     arrived: new Map(),
     parts: [],
     pointer: null,
     hover: -1,
   });
-  const [seedIdx, setSeedIdx] = useState(ORDER[0]);
+  const [seedIdx, setSeedIdx] = useState(ORDER.metr[0]);
   const [playing, setPlaying] = useState(true);
   const [speedIdx, setSpeedIdx] = useState(1);
   const [snap, setSnap] = useState<Snap | null>(null);
@@ -421,7 +447,15 @@ export function SwarmSim() {
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
         <aside className="flex flex-col gap-6">
           {tabs(
-            ORDER.map((i) => ({
+            DATASETS.map((d) => ({
+              key: d.id,
+              label: d.label,
+              on: seed.set === d.id,
+              click: () => pickSeed(ORDER[d.id][0]),
+            })),
+          )}
+          {tabs(
+            ORDER[seed.set].map((i) => ({
               key: i,
               label: `Seed ${SEEDS[i].seed}${SEEDS[i].calibration ? "*" : ""}`,
               on: i === seedIdx,
@@ -473,9 +507,8 @@ export function SwarmSim() {
             </ul>
           )}
           <p className="mt-auto text-[11px] leading-relaxed text-white/35">
-            A real run from the METR hard set: five agents write a briefing with 18 planted errors.
-            Each dot is a message, grouped by who sent it, with Jev&apos;s real scores. Flagged messages
-            move to the centre. *Seed 1 is where the threshold was picked.
+            {dataset(seed.set).note} Each dot is a message, grouped by who sent it, with Jev&apos;s
+            real scores. Flagged messages move to the centre.
           </p>
         </aside>
 
@@ -492,7 +525,7 @@ export function SwarmSim() {
           <canvas
             ref={ref}
             role="img"
-            aria-label={`METR hard set, seed ${seed.seed}: messages from five agents, grouped by sender. Flagged messages move to the centre.`}
+            aria-label={`${dataset(seed.set).label}, seed ${seed.seed}: messages from five agents, grouped by sender. Flagged messages move to the centre.`}
             className="absolute inset-0 h-full w-full"
           />
           {[...AGENTS, "Flagged"].map((name, c) => {
