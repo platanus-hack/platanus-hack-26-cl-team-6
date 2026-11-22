@@ -2,7 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Popover } from "@base-ui/react/popover";
-import { ExclamationMarkIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  ArrowCounterClockwiseIcon,
+  BugIcon,
+  CheckCircleIcon,
+  CircleNotchIcon,
+  ExclamationMarkIcon,
+  GlobeIcon,
+  KeyIcon,
+  KeyReturnIcon,
+  UserIcon,
+  WarningCircleIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import demo from "@/data/demo.json";
 
 type Scores = { fabrication: number; unverified_trust: number };
@@ -178,7 +189,7 @@ function Meter({ label, value, was }: { label: string; value: number; was?: numb
       </div>
       <div className="relative h-1 rounded-full bg-white/10">
         <div
-          className="absolute inset-y-0 left-0 rounded-full transition-[width,background-color] duration-700 ease-out"
+          className="absolute inset-y-0 left-0 rounded-full transition-[width,background-color] duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
           style={{
             width: `${value * 100}%`,
             backgroundColor: hot ? ORANGE : "rgba(255,255,255,0.6)",
@@ -195,18 +206,28 @@ function Meter({ label, value, was }: { label: string; value: number; was?: numb
 }
 
 const POPUP =
-  "w-[min(22rem,calc(100vw-2rem))] origin-[var(--transform-origin)] rounded-xl border border-white/15 bg-neutral-950/95 p-4 text-left text-white shadow-2xl shadow-black/60 backdrop-blur-md transition-[opacity,scale] duration-150 data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0";
+  "w-[min(22rem,calc(100vw-2rem))] origin-[var(--transform-origin)] rounded-xl border border-white/15 bg-neutral-950/95 p-4 text-left text-white shadow-2xl shadow-black/60 backdrop-blur-md transition-[opacity,scale] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0";
 
-function Tag({ children, color }: { children: React.ReactNode; color?: string }) {
+function Badge({
+  icon: Icon,
+  label,
+  color,
+}: {
+  icon: typeof GlobeIcon;
+  label: string;
+  color?: string;
+}) {
   return (
     <span
-      className="rounded border px-1.5 text-[10px] tracking-wide uppercase"
+      title={label}
+      aria-label={label}
+      className="flex size-5 items-center justify-center rounded-md border"
       style={{
-        color: color ?? "rgba(255,255,255,0.55)",
+        color: color ?? "rgba(255,255,255,0.6)",
         borderColor: color ? `${color}66` : "rgba(255,255,255,0.15)",
       }}
     >
-      {children}
+      <Icon size={12} weight="fill" aria-hidden />
     </span>
   );
 }
@@ -257,7 +278,7 @@ function Node({
             />
           )}
           <span
-            className={`flex items-center justify-center transition-all duration-500 group-hover:scale-125 group-focus-visible:scale-125 group-data-[popup-open]:scale-125 ${pending ? "animate-pulse" : ""}`}
+            className={`flex items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-125 group-focus-visible:scale-125 group-data-[popup-open]:scale-125 ${pending ? "animate-pulse" : ""}`}
             style={
               flagged
                 ? {
@@ -280,7 +301,7 @@ function Node({
           </span>
         </span>
         <span
-          className={`hidden max-w-[9.5rem] truncate text-[11px] leading-tight transition-colors sm:block ${
+          className={`hidden max-w-[9.5rem] truncate text-[11px] leading-tight transition-colors duration-300 ease-out sm:block ${
             flagged ? "" : "text-white/55 group-hover:text-white"
           }`}
           style={flagged ? { color: ORANGE } : undefined}
@@ -293,21 +314,27 @@ function Node({
       <Popover.Portal>
         <Popover.Positioner side="right" align="center" sideOffset={14} collisionPadding={16} className="z-50">
           <Popover.Popup className={POPUP}>
-            <div className="flex flex-wrap items-center gap-2 text-xs">
+            <div className="flex items-center gap-2 text-xs">
               <span className="size-2 rounded-full" style={{ backgroundColor: lane.color }} aria-hidden />
               <Popover.Title className="font-semibold">{event.actor}</Popover.Title>
               <span className="font-mono text-white/35">{event.ts.slice(11, 16)}</span>
-              {isFetch && <Tag>fetch_url · source</Tag>}
-              {event.error && <Tag color={ORANGE}>planted · {event.error.type}</Tag>}
-              {edited && (
-                <button
-                  type="button"
-                  onClick={() => onEdit(event.id, ORIGINAL[event.id])}
-                  className="ml-auto cursor-pointer text-[11px] text-white/45 underline-offset-2 hover:text-white hover:underline"
-                >
-                  Undo edit
-                </button>
-              )}
+              <span className="ml-auto flex items-center gap-1.5">
+                {isFetch && <Badge icon={GlobeIcon} label="Fetched source" />}
+                {event.error && (
+                  <Badge icon={BugIcon} label={`Planted error: ${event.error.type}`} color={ORANGE} />
+                )}
+                {edited && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(event.id, ORIGINAL[event.id])}
+                    title="Undo edit"
+                    aria-label="Undo edit"
+                    className="flex size-5 cursor-pointer items-center justify-center rounded-md border border-white/15 text-white/60 hover:border-white/40 hover:text-white"
+                  >
+                    <ArrowCounterClockwiseIcon size={12} weight="fill" aria-hidden />
+                  </button>
+                )}
+              </span>
             </div>
 
             <textarea
@@ -322,12 +349,12 @@ function Node({
               }}
               aria-label={`Message from ${event.actor}`}
               spellCheck={false}
-              className={`field-sizing-content mt-3 max-h-56 min-h-16 w-full resize-none overflow-y-auto rounded-lg border border-white/10 bg-white/[0.04] p-2.5 leading-relaxed text-white/90 outline-none transition-colors focus:border-white/30 focus:bg-white/[0.07] ${
+              className={`field-sizing-content mt-3 max-h-56 min-h-16 w-full resize-none overflow-y-auto rounded-lg border border-white/10 bg-white/[0.04] p-2.5 leading-relaxed text-white/90 outline-none transition-colors duration-300 ease-out focus:border-white/30 focus:bg-white/[0.07] ${
                 isFetch ? "font-mono text-[11px]" : "text-sm"
               }`}
             />
-            <Popover.Description className="mt-1.5 text-[11px] text-white/35">
-              Rewrite it, then press Enter. Our mechanism re-scores this message and every one after it.
+            <Popover.Description className="mt-1.5 flex items-center gap-1.5 text-[11px] text-white/35">
+              <KeyReturnIcon size={12} weight="fill" aria-hidden /> Edit and press Enter to re-score
             </Popover.Description>
 
             {scores && (
@@ -342,22 +369,34 @@ function Node({
                   value={scores.unverified_trust}
                   was={edited ? recorded?.unverified_trust : undefined}
                 />
-                <div className="flex items-center justify-between text-[11px]">
-                  <span
-                    className="font-semibold tracking-wide uppercase"
-                    style={{ color: flagged ? ORANGE : "rgba(255,255,255,0.4)" }}
-                  >
-                    {pending ? "Scoring…" : flagged ? "Flagged by our mechanism" : "Not flagged"}
-                  </span>
-                  <span className="text-white/35">flag at {T.toFixed(2)}</span>
+                <div
+                  className="flex items-center gap-1.5 text-xs font-medium"
+                  style={{ color: flagged && !pending ? ORANGE : "rgba(255,255,255,0.5)" }}
+                >
+                  {pending ? (
+                    <>
+                      <CircleNotchIcon size={14} weight="fill" className="animate-spin [animation-timing-function:cubic-bezier(0.65,0,0.35,1)]" aria-hidden /> Scoring
+                    </>
+                  ) : flagged ? (
+                    <>
+                      <WarningCircleIcon size={14} weight="fill" aria-hidden /> Flagged
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircleIcon size={14} weight="fill" aria-hidden /> Not flagged
+                    </>
+                  )}
                 </div>
               </div>
             )}
 
             {event.error && (
-              <p className="mt-4 border-t border-white/10 pt-3 text-[11px] leading-snug text-white/45">
-                <span className="text-white/70">Answer key</span> (our mechanism never sees
-                this): {event.error.truth}
+              <p
+                className="mt-4 flex gap-2 border-t border-white/10 pt-3 text-[11px] leading-snug text-white/45"
+                title="Our mechanism never sees this"
+              >
+                <KeyIcon size={13} weight="fill" className="mt-px shrink-0 text-white/60" aria-hidden />
+                <span>{event.error.truth}</span>
               </p>
             )}
           </Popover.Popup>
@@ -394,7 +433,7 @@ export function LiveTranscript() {
   const fetchBottom = rowY(FETCHES[FETCHES.length - 1].k) + 22;
 
   return (
-    <div className="flex w-full flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 delay-200 duration-1000 fill-mode-backwards">
+    <div className="flex w-full flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 delay-200 duration-1000 fill-mode-backwards [animation-timing-function:cubic-bezier(0.16,1,0.3,1)]">
       <div className="relative w-full" style={{ height: HEIGHT }}>
         <svg
           className="pointer-events-none absolute inset-0 h-full w-full"
@@ -418,14 +457,16 @@ export function LiveTranscript() {
             className="group absolute left-1/2 cursor-pointer flex -translate-x-1/2 flex-col items-center gap-2 outline-none"
             style={{ top: ORG_Y - 8 }}
           >
-            <span className="size-7 bg-white transition-transform group-hover:scale-110" />
+            <span className="size-7 bg-white transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-110" />
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Positioner side="bottom" sideOffset={12} collisionPadding={16} className="z-50">
               <Popover.Popup className={POPUP}>
                 <div className="flex items-center gap-2 text-xs">
                   <Popover.Title className="font-semibold">Organizer</Popover.Title>
-                  <Tag>human</Tag>
+                  <span className="ml-auto">
+                    <Badge icon={UserIcon} label="Human" />
+                  </span>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-white/75">{organizer.content}</p>
               </Popover.Popup>

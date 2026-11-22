@@ -49,6 +49,59 @@ function Column({ set }: { set: JevSet }) {
   );
 }
 
+// Hard set, threshold 0.85, seeds 2–3 (jev-swarm/results/hard.md).
+// Scalable: Jev's 1.87M input tokens priced at Sonnet 5.5 ($2/M input, output
+// not counted) = $3.75 vs our $0.134 for the same 493 messages. Jev's context is
+// capped (last 30 messages + a ledger of at most 9,000 chars), so cost per
+// message does not grow with the swarm.
+// Real time: scored causally as each message arrives.
+const PILLARS = [
+  {
+    kicker: "Scalable",
+    value: "28×",
+    unit: "cheaper than a Sonnet judge",
+    body: "Built for big swarms: a flat cost per message, no frontier model on every message.",
+  },
+  {
+    kicker: "Real time",
+    value: "Live",
+    unit: "with the same precision as comparable alternatives",
+    body: "Errors are flagged as they're posted, before other agents can repeat them.",
+  },
+];
+
+function Pillars() {
+  return (
+    <section
+      id="why"
+      aria-label="Why Jev"
+      className="grid scroll-mt-20 grid-cols-1 border-b border-white/15 md:grid-cols-2"
+    >
+      {PILLARS.map((p, i) => (
+        <div
+          key={p.kicker}
+          className={`flex flex-col gap-5 py-10 md:px-8 md:py-12 ${
+            i > 0 ? "border-t border-white/15 md:border-t-0 md:border-l" : ""
+          } ${i === 0 ? "md:pl-0" : ""} ${i === PILLARS.length - 1 ? "md:pr-0" : ""}`}
+        >
+          <span className="text-xs font-semibold tracking-wide text-white/45 uppercase">
+            {p.kicker}
+          </span>
+          <div className="flex flex-col gap-1">
+            <span className="text-5xl font-light tracking-[-0.04em] text-white md:text-6xl">
+              {p.value}
+            </span>
+            <span className="text-sm text-white/55">{p.unit}</span>
+          </div>
+          <p className="max-w-sm text-sm leading-relaxed text-white/60">
+            {p.body}
+          </p>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 const STEPS = [
   {
     title: "A swarm writes a briefing",
@@ -81,7 +134,9 @@ export default function Home() {
     <>
       <SiteHeader />
       <Hero />
-      <main className="flex flex-1 flex-col gap-24 bg-black px-6 py-16 text-white md:px-12 lg:px-20">
+      <main className="flex flex-1 flex-col gap-24 border-t border-white/15 bg-black px-6 py-16 text-white md:px-12 lg:px-20">
+        <Pillars />
+
         <div
           id="results"
           className="grid scroll-mt-20 grid-cols-1 gap-16 md:grid-cols-2 md:gap-12"
