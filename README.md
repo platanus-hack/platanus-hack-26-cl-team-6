@@ -9,13 +9,10 @@ Track: 🛡️ AI Security
 team-6
 
 
-El problema
 
 Cuando varios agentes colaboran, normalmente solo uno lee la fuente y los demás confían en él. Si ese agente se equivoca en una cifra o una cita, el resto la repite y el error termina en el resultado final.
 
-Cómo funciona
-
-Dos modelos siguen la conversación en tiempo real:
+Con SwarmWatch, dos modelos siguen la conversación en tiempo real:
 
 Modelo de notas: cada 20 mensajes, un modelo de lenguaje registra quién dijo qué y qué dice realmente la fuente. Solo la fuente cuenta como verdadera; lo que afirma un agente queda marcado como "aún no verificado".
 Modelo de decisión (Jev): usa esas notas para revisar cada mensaje nuevo y se pregunta: ¿este mensaje inventa algo? ¿Trata algo no verificado como cierto? Si está seguro de que sí, lo marca.
