@@ -81,9 +81,49 @@ def export(name: str) -> None:
     print(f"wrote {dest}")
 
 
+def export_swarm() -> None:
+    """AI Village swarm village -> web/public/data/swarm-village.json (fetched at runtime, gitignored: the dataset's
+    terms are research-only, so confirm with AI Digest before deploying it publicly). Compact rows:
+    [minute, agent index, fabrication, unverified_trust, text excerpt, [mentioned agent indices]]."""
+    import re
+    events = json.loads((ROOT / "data/swarm-village-run/seed-1.json").read_text())["events"]
+    rows = {r["id"]: r for r in json.loads((ROOT / "results/swarm.json").read_text())["rows"]}
+    agents = sorted({e["actor"] for e in events if e["role"] == "agent"})
+    idx = {a: i for i, a in enumerate(agents)}
+    name_re = re.compile(r"\b(" + "|".join(map(re.escape, sorted(agents, key=len, reverse=True))) + r")\b")
+    t0 = datetime.fromisoformat(events[0]["ts"])
+    msgs = []
+    for e in events:
+        r = rows.get(e["id"])
+        if not r:
+            continue
+        text = " ".join(e["content"].split())
+        refs = sorted({idx[m] for m in name_re.findall(e["content"]) if m != e["actor"]})
+        msgs.append([round((datetime.fromisoformat(e["ts"]) - t0).total_seconds() / 60, 2), idx[e["actor"]],
+                     r["scores"]["fabrication"], r["scores"]["unverified_trust"],
+                     text[:240] + ("…" if len(text) > 240 else ""), refs])
+    out = {
+        "source": "AI Village swarm village (Hugging Face aidigestorg/ai-village); Jev scores from results/swarm.json",
+        "threshold": C.THRESHOLD,
+        "start": events[0]["ts"],
+        # Phase 2 (roles) began at 3am Pacific, Aug 30 = 10:00 UTC.
+        "phase2": round((datetime.fromisoformat("2026-08-30T10:00:00+00:00") - t0).total_seconds() / 60, 2),
+        "agents": agents,
+        "messages": msgs,
+    }
+    dest = ROOT.parent / "web/public/data/swarm-village.json"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
+    flagged = [m for m in msgs if max(m[2], m[3]) >= C.THRESHOLD]
+    print(f"swarm: {len(msgs)} messages, {len(agents)} agents, {len(flagged)} flagged "
+          f"({len({m[1] for m in flagged})} agents flagged at least once); wrote {dest} ({dest.stat().st_size / 1e6:.2f} MB)")
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", choices=[*SETS, "all"], default="all")
+    ap.add_argument("--dataset", choices=[*SETS, "swarm", "all"], default="all")
     a = ap.parse_args()
-    for n in (SETS if a.dataset == "all" else [a.dataset]):
+    for n in (SETS if a.dataset == "all" else [] if a.dataset == "swarm" else [a.dataset]):
         export(n)
+    if a.dataset == "swarm" or (a.dataset == "all" and (ROOT / "results/swarm.json").exists()):
+        export_swarm()

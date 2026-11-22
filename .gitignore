@@ -36,3 +36,4 @@ pnpm-debug.log*
 jev-swarm/data/swarm-village/
 jev-swarm/data/swarm-village-run/
 jev-swarm/results/swarm.*
+web/public/data/swarm-village.json

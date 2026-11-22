@@ -87,6 +87,8 @@ def best_threshold(rows: list[dict]) -> float:
 async def run(dataset: str, t: float) -> dict:
     rows, usage = [], {"jev_input_tokens": 0, "ledger_input_tokens": 0, "ledger_output_tokens": 0}
     C.MISSION = C.MISSIONS[dataset]
+    if dataset == "swarm":
+        C.LEDGER = {**C.LEDGER, "max_agents": 40, "claims_per_agent": 2}
     key = _key()
     ddir = DATA / C.DATA_DIRS[dataset]
     seeds = sorted(int(p.stem.split("-")[1]) for p in ddir.glob("seed-*.json"))
@@ -135,8 +137,39 @@ def _p(x) -> str:
     return "–" if x is None else f"{x:.0%}" if isinstance(x, float) else str(x)
 
 
+def report_unlabelled(res: dict) -> str:
+    """No answer key: report where flags fall, never recall, precision or "false alarms"."""
+    rows, t, co = res["rows"], res["threshold"], res["cost"]
+    flagged = sorted((r for r in rows if r["risk"] >= t), key=lambda r: -r["risk"])
+    by_agent = {}
+    for r in flagged:
+        by_agent[r["actor"]] = by_agent.get(r["actor"], 0) + 1
+    L = [f"# Jev + ledger on the AI Village swarm (133 agents), threshold {t}\n",
+         f"Threshold {t} was picked on METR hard seed 1 and not tuned on this set. There is no answer key, so this "
+         "reports where flags fall, not recall or precision.\n",
+         f"Flagged {len(flagged)} of {len(rows)} messages ({len(flagged) / len(rows):.1%}) from {len(by_agent)} agents. "
+         f"Fabrication >= {t}: {sum(r['scores'].get('fabrication', 0) >= t for r in rows)}; "
+         f"unverified trust >= {t}: {sum(r['scores'].get('unverified_trust', 0) >= t for r in rows)}. "
+         f"${co['usd_per_100_messages']:.3f} per 100 messages.\n",
+         "## Flags by threshold (for reading only)\n", "| Threshold | Messages flagged |", "|---|---|"]
+    L += [f"| {g} | {sum(r['risk'] >= g for r in rows)} |" for g in GRID]
+    L += ["\n## Most-flagged agents\n", "| Agent | Flags |", "|---|---|"]
+    L += [f"| {a} | {n} |" for a, n in sorted(by_agent.items(), key=lambda x: -x[1])[:10]]
+    L += ["\n## Highest-scoring flags (not yet checked by hand)\n", "| Message | Agent | fabrication / unverified_trust | Text |",
+          "|---|---|---|---|"]
+    for r in flagged[:40]:
+        txt = r["content"].replace("\n", " ").replace("|", "/")
+        L.append(f"| {r['id']} | {r['actor']} | {r['scores'].get('fabrication')} / {r['scores'].get('unverified_trust')} | "
+                 f"{txt[:200]}{'…' if len(txt) > 200 else ''} |")
+    L += [f"\nCost: {co['messages']} messages, ${co['usd']:.3f} in total (Jev {co['jev_input_tokens']:,} input tokens; Haiku ledger "
+          f"{co['ledger_input_tokens']:,} in / {co['ledger_output_tokens']:,} out)."]
+    return "\n".join(L)
+
+
 def report(res: dict) -> str:
     T, A = res["test"], res["all_seeds"]
+    if T["n_positive"] == 0:
+        return report_unlabelled(res)
     c = T["confusion"]
     L = [f"# Jev + ledger on the { {'hf': 'Hugging Face incident', 'swarm': 'AI Village (133 agents)'}.get(res['dataset'], 'METR') } swarm ({res['dataset']} set), threshold {res['threshold']}\n",
          (f"Threshold {res['threshold']} was picked on seed {res['calibration_seed']} (best F1; a fresh pick on this run's "

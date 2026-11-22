@@ -10,6 +10,7 @@ import asyncio
 import json
 import os
 import random
+import ssl
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -152,11 +153,26 @@ async def build_ledger(stream: list[dict], cache_path) -> tuple[dict[int, str], 
         return {int(k): v for k, v in d["snapshots"].items()}, d["usage"]
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise RuntimeError("ANTHROPIC_API_KEY is not set (put it in the repo's .env.local)")
-    client = anthropic.AsyncAnthropic(max_retries=4)
+    client = anthropic.AsyncAnthropic(max_retries=4, timeout=300)
+    system = LEDGER_SYSTEM
+    if C.LEDGER.get("max_agents"):
+        # Large swarms: the ledger Jev reads is cut at max_chars anyway, so track only the most recently active
+        # agents. Without this the ledger outgrows a single response (133 agents x 4 claims).
+        system += (f"\n\nThis swarm is large: track at most {C.LEDGER['max_agents']} agents, the most recently "
+                   f"active ones, with at most {C.LEDGER['claims_per_agent']} claims each. Drop the least recently "
+                   f"active agents first.")
     led = {"agents": [], "open_questions": [], "human_instructions": [], "source_facts": []}
     snaps, usage = {}, {"calls": 0, "input_tokens": 0, "output_tokens": 0}
     start, since = 0, 0
+    # Resume from the last saved update, if an earlier run stopped part-way.
+    partial = cache_path.with_name(cache_path.stem + ".partial.json")
+    if partial.exists():
+        p = json.loads(partial.read_text())
+        led, usage, start = p["led"], p["usage"], p["start"]
+        snaps = {int(k): v for k, v in p["snapshots"].items()}
     for i in range(len(stream)):
+        if i < start:
+            continue
         since += scored(stream[i])
         if since < C.LEDGER["every_n_messages"] and i != len(stream) - 1:
             continue
@@ -164,7 +180,7 @@ async def build_ledger(stream: list[dict], cache_path) -> tuple[dict[int, str], 
         user = ("PREVIOUS LEDGER (JSON):\n" + json.dumps(led, ensure_ascii=False) + "\n\nNEW EVENTS (oldest first):\n"
                 + "\n".join(render(x, C.LEDGER["event_chars"], 400) for x in batch))
         resp = await client.messages.create(
-            model=C.LEDGER["model"], max_tokens=16000, system=LEDGER_SYSTEM,
+            model=C.LEDGER["model"], max_tokens=32000, system=system,
             messages=[{"role": "user", "content": user}],
             output_config={"effort": "low", "format": {"type": "json_schema", "schema": LEDGER_SCHEMA}})
         if resp.stop_reason in ("refusal", "max_tokens"):
@@ -176,8 +192,12 @@ async def build_ledger(stream: list[dict], cache_path) -> tuple[dict[int, str], 
         led = json.loads("".join(b.text for b in resp.content if b.type == "text"))
         snaps[i + 1] = render_ledger(led)
         start, since = i + 1, 0
+        partial.parent.mkdir(parents=True, exist_ok=True)
+        partial.write_text(json.dumps({"led": led, "usage": usage, "start": start, "snapshots": snaps}, ensure_ascii=False))
+        print(f"[ledger] update {usage['calls']}: through event {start}/{len(stream)}, {u.output_tokens} tokens out", flush=True)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     cache_path.write_text(json.dumps({"snapshots": snaps, "usage": usage}, ensure_ascii=False, indent=1))
+    partial.unlink(missing_ok=True)
     return snaps, usage
 
 
@@ -205,7 +225,7 @@ class Jev:
         for attempt in range(7):
             try:
                 r = await self.http.post(JEV_ENDPOINT, json=body)
-            except (httpx.TimeoutException, httpx.TransportError):
+            except (httpx.TimeoutException, httpx.TransportError, ssl.SSLError, OSError):  # a TLS glitch can surface raw
                 if attempt == 6:
                     raise
                 await asyncio.sleep(min(30, 2 ** attempt) + random.random())

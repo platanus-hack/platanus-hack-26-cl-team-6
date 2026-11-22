@@ -1,4 +1,4 @@
-import { SwarmSim } from "@/components/swarm-sim";
+import { SwarmVillage } from "@/components/swarm-village";
 import { Hero, SiteFooter, SiteHeader } from "@/components/site-chrome";
 
 function SectionHeader({ label, hint }: { label: string; hint: string }) {
@@ -106,8 +106,8 @@ export default function Home() {
         </section>
 
         <section id="swarm" className="flex scroll-mt-20 flex-col gap-8">
-          <SectionHeader label="Real runs" hint="5 agents · METR report and Hugging Face incident" />
-          <SwarmSim />
+          <SectionHeader label="A real swarm" hint="AI Village Swarm · 133 agents" />
+          <SwarmVillage />
         </section>
       </main>
       <SiteFooter />
