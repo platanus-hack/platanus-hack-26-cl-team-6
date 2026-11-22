@@ -6,12 +6,13 @@
 
 Track: 🛡️ AI Security
 
-team-6
+*SwarmWatch vigila las conversaciones entre agentes de IA que trabajan en equipo y marca las alucinaciones en el momento en que aparecen, antes de que otros agentes las repitan.*
 
-
+Problema:
 
 Cuando varios agentes colaboran, normalmente solo uno lee la fuente y los demás confían en él. Si ese agente se equivoca en una cifra o una cita, el resto la repite y el error termina en el resultado final.
 
+Solución:
 Con SwarmWatch, dos modelos siguen la conversación en tiempo real:
 
 Modelo de notas: cada 20 mensajes, un modelo de lenguaje registra quién dijo qué y qué dice realmente la fuente. Solo la fuente cuenta como verdadera; lo que afirma un agente queda marcado como "aún no verificado".
