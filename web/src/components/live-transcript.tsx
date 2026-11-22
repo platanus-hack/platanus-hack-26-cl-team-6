@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Popover } from "@base-ui/react/popover";
+import { ExclamationMarkIcon } from "@phosphor-icons/react/dist/ssr";
 import demo from "@/data/demo.json";
 
 type Scores = { fabrication: number; unverified_trust: number };
@@ -243,7 +244,7 @@ function Node({
   return (
     <Popover.Root onOpenChange={(open) => open && onOpen()}>
       <Popover.Trigger
-        aria-label={`${event.actor}: ${label}. ${flagged ? "Flagged by Jev." : ""} Open to read and edit.`}
+        aria-label={`${event.actor}: ${label}. ${flagged ? "Flagged by our mechanism." : ""} Open to read and edit.`}
         className="group absolute flex -translate-y-1/2 items-center gap-3 rounded-md py-1 pr-2 pl-0 text-left outline-none"
         style={{ left: `calc(${lane.x}% - 7px)`, top: y }}
       >
@@ -256,14 +257,13 @@ function Node({
             />
           )}
           <span
-            className={`block transition-all duration-500 group-hover:scale-125 group-focus-visible:scale-125 group-data-[popup-open]:scale-125 ${pending ? "animate-pulse" : ""}`}
+            className={`flex items-center justify-center transition-all duration-500 group-hover:scale-125 group-focus-visible:scale-125 group-data-[popup-open]:scale-125 ${pending ? "animate-pulse" : ""}`}
             style={
               flagged
                 ? {
-                    width: 13,
-                    height: 13,
+                    width: 16,
+                    height: 16,
                     backgroundColor: ORANGE,
-                    boxShadow: `0 0 14px ${ORANGE}`,
                   }
                 : isFetch
                   ? {
@@ -275,7 +275,9 @@ function Node({
                     }
                   : { width: 10, height: 10, borderRadius: 999, backgroundColor: "#fff" }
             }
-          />
+          >
+            {flagged && <ExclamationMarkIcon size={12} weight="bold" color="#000" aria-hidden />}
+          </span>
         </span>
         <span
           className={`hidden max-w-[9.5rem] truncate text-[11px] leading-tight transition-colors sm:block ${
@@ -338,7 +340,7 @@ function Node({
                     className="font-semibold tracking-wide uppercase"
                     style={{ color: flagged ? ORANGE : "rgba(255,255,255,0.4)" }}
                   >
-                    {pending ? "Scoring…" : flagged ? "Flagged by Jev" : "Not flagged"}
+                    {pending ? "Scoring…" : flagged ? "Flagged by our mechanism" : "Not flagged"}
                   </span>
                   <span className="text-white/35">flag at {T.toFixed(2)}</span>
                 </div>
@@ -393,24 +395,6 @@ export function LiveTranscript() {
 
   return (
     <div className="flex w-full flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 delay-200 duration-1000 fill-mode-backwards">
-      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/50">
-        <span className="flex items-center gap-2">
-          <span className="size-2 rounded-full bg-white" /> message
-        </span>
-        <span className="flex items-center gap-2">
-          <span
-            className="size-2.5 rounded-full border border-white"
-            style={{ background: "radial-gradient(circle, #fff 1.5px, #000 2px)" }}
-          />{" "}
-          source fetch
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="size-2.5" style={{ backgroundColor: ORANGE }} /> flagged by Jev
-        </span>
-        <span className="text-white/30">·</span>
-        <span className="text-white/70">Click any dot to read and rewrite it</span>
-      </div>
-
       <div className="relative w-full" style={{ height: HEIGHT }}>
         <svg
           className="pointer-events-none absolute inset-0 h-full w-full"
@@ -476,7 +460,7 @@ export function LiveTranscript() {
             height: fetchBottom - fetchTop,
           }}
         >
-          <span className="absolute -top-5 left-0 text-[11px] text-white/55">
+          <span className="absolute top-full left-0 mt-1.5 text-[11px] whitespace-nowrap text-white/55">
             Atlas fetches the source
           </span>
         </div>
@@ -522,6 +506,22 @@ export function LiveTranscript() {
             )}
           </span>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/50">
+        <span className="flex items-center gap-2">
+          <span className="size-2 rounded-full bg-white" /> message
+        </span>
+        <span className="flex items-center gap-2">
+          <span
+            className="size-2.5 rounded-full border border-white"
+            style={{ background: "radial-gradient(circle, #fff 1.5px, #000 2px)" }}
+          />{" "}
+          source fetch
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="size-2.5" style={{ backgroundColor: ORANGE }} /> flagged by our mechanism
+        </span>
       </div>
     </div>
   );
