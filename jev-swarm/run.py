@@ -138,7 +138,7 @@ def _p(x) -> str:
 def report(res: dict) -> str:
     T, A = res["test"], res["all_seeds"]
     c = T["confusion"]
-    L = [f"# Jev + ledger on the {'Hugging Face incident' if res['dataset'] == 'hf' else 'METR'} swarm ({res['dataset']} set), threshold {res['threshold']}\n",
+    L = [f"# Jev + ledger on the { {'hf': 'Hugging Face incident', 'swarm': 'AI Village (133 agents)'}.get(res['dataset'], 'METR') } swarm ({res['dataset']} set), threshold {res['threshold']}\n",
          (f"Threshold {res['threshold']} was picked on seed {res['calibration_seed']} (best F1; a fresh pick on this run's "
           f"seed {res['calibration_seed']} gives {res['best_threshold_on_calibration_seed']}). Headline = seeds "
           f"{', '.join(map(str, res['test_seeds']))}.\n" if res["calibration_seed"] else
@@ -167,8 +167,17 @@ def report(res: dict) -> str:
     L += ["\n## Threshold sweep on the headline seeds (for reading only)\n", "| Threshold | Recall | Precision | F1 | False-positive rate |", "|---|---|---|---|---|"]
     for g, v in res["sweep_test"].items():
         L.append(f"| {g} | {_p(v['recall'])} | {_p(v['precision'])} | {_p(v['f1'])} | {v['false_positive_rate']:.1%} |")
-    L += ["\n## Every mistake on the headline seeds\n", "| Kind | Message | Label | fabrication / unverified_trust | Text |", "|---|---|---|---|---|"]
-    for e in res["errors_on_test_seeds"]:
+    unlabelled = res["test"]["n_positive"] == 0
+    if unlabelled:
+        # No answer key: these are flags, not mistakes. Show the highest-scoring ones for hand-checking.
+        L += ["\n## Highest-scoring flags (no answer key: not yet checked by hand)\n",
+              "| Kind | Message | Label | fabrication / unverified_trust | Text |", "|---|---|---|---|---|"]
+    else:
+        L += ["\n## Every mistake on the headline seeds\n", "| Kind | Message | Label | fabrication / unverified_trust | Text |", "|---|---|---|---|---|"]
+    shown = sorted(res["errors_on_test_seeds"], key=lambda e: -e["risk"])[:40] if unlabelled else res["errors_on_test_seeds"]
+    for e in shown:
+        if unlabelled:
+            e = {**e, "kind": "flag"}
         lab = f"{e['category']} {e['error_type'] or ''} {e['claim'] or ''}{' (multi-claim)' if e['multi'] else ''}".strip()
         txt = e["content"].replace("\n", " ").replace("|", "/")
         L.append(f"| {e['kind']} | {e['id']} | {lab} | {e['scores'].get('fabrication')} / {e['scores'].get('unverified_trust')} | "
@@ -183,7 +192,7 @@ def main() -> None:
     load_dotenv(HERE.parent / ".env.local")
     load_dotenv(HERE.parent / ".env")
     ap = argparse.ArgumentParser()
-    ap.add_argument("--dataset", choices=["hard", "easy", "hf"], default="hard")
+    ap.add_argument("--dataset", choices=["hard", "easy", "hf", "swarm"], default="hard")
     ap.add_argument("--threshold", type=float, default=C.THRESHOLD)
     a = ap.parse_args()
     res = asyncio.run(run(a.dataset, a.threshold))

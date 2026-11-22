@@ -1,6 +1,6 @@
 export const SITE = {
   name: "SwarmWatch",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://platanus.ignaciopalma.com",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://swarmwatch.app",
   title: "SwarmWatch · Hallucinations, caught live",
   tagline: "Hallucinations, caught live.",
   description:

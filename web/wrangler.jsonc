@@ -9,6 +9,10 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "routes": [
+    { "pattern": "swarmwatch.app", "custom_domain": true },
+    { "pattern": "www.swarmwatch.app", "custom_domain": true }
+  ],
   "observability": {
     "enabled": true
   }
