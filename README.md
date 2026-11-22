@@ -1,4 +1,4 @@
-# team-6 Platanus Hack 26: Santiago ft. Buk Project
+# SwarmWatch
 
 **Current project logo:** project-logo.png
 
