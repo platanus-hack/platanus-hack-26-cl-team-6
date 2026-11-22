@@ -19,7 +19,6 @@ const RECORDED = Object.fromEntries(
   EVENTS.filter((e) => e.scores).map((e) => [e.id, e.scores!]),
 ) as Record<string, Scores>;
 const ORANGE = "#ff5a1f";
-const DEBOUNCE_MS = 900;
 const risk = (s: Scores) => Math.max(s.fabrication, s.unverified_trust);
 
 // ---------------------------------------------------------------- layout
@@ -72,14 +71,12 @@ function useJev() {
   const [status, setStatus] = useState<Status>("recorded");
   const [errorMsg, setErrorMsg] = useState("");
   const abort = useRef<AbortController | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textsRef = useRef(texts);
   // Earliest edited message not yet re-scored with its current text.
   const fromRef = useRef<number | null>(null);
 
   useEffect(
     () => () => {
-      if (timer.current) clearTimeout(timer.current);
       abort.current?.abort();
     },
     [],
@@ -114,39 +111,40 @@ function useJev() {
     [],
   );
 
-  // After typing pauses, re-score the edited message and every agent message after it:
-  // each later message is scored with the edited one in its context.
-  const edit = useCallback(
-    (id: string, text: string) => {
-      const i = EVENTS.findIndex((e) => e.id === id);
-      const next = { ...textsRef.current, [id]: text };
-      textsRef.current = next;
-      setTexts(next);
-      fromRef.current = Math.min(fromRef.current ?? i, i);
-      if (timer.current) clearTimeout(timer.current);
-      abort.current?.abort();
+  // Typing only updates the text. Scoring waits for commit() (Enter).
+  const edit = useCallback((id: string, text: string) => {
+    const i = EVENTS.findIndex((e) => e.id === id);
+    const next = { ...textsRef.current, [id]: text };
+    textsRef.current = next;
+    setTexts(next);
+    fromRef.current = Math.min(fromRef.current ?? i, i);
 
-      const edits = Object.fromEntries(
-        Object.entries(next).filter(([k, t]) => t !== ORIGINAL[k]),
-      );
-      if (!Object.keys(edits).length) {
-        fromRef.current = null;
-        setScores(RECORDED);
-        setPending(new Set());
-        setStatus("recorded");
-        return;
-      }
-      const targets = EVENTS.slice(fromRef.current)
-        .filter((e) => e.scores)
-        .map((e) => e.id);
-      setPending(new Set(targets));
-      timer.current = setTimeout(() => rescore(edits, targets), DEBOUNCE_MS);
-    },
-    [rescore],
-  );
+    // Back to the original transcript: restore the recorded scores right away.
+    if (Object.entries(next).every(([k, t]) => t === ORIGINAL[k])) {
+      abort.current?.abort();
+      fromRef.current = null;
+      setScores(RECORDED);
+      setPending(new Set());
+      setStatus("recorded");
+    }
+  }, []);
+
+  // Re-score the earliest edited message and every agent message after it:
+  // each later message is scored with the edited one in its context.
+  const commit = useCallback(() => {
+    if (fromRef.current === null) return;
+    const edits = Object.fromEntries(
+      Object.entries(textsRef.current).filter(([k, t]) => t !== ORIGINAL[k]),
+    );
+    if (!Object.keys(edits).length) return;
+    const targets = EVENTS.slice(fromRef.current)
+      .filter((e) => e.scores)
+      .map((e) => e.id);
+    setPending(new Set(targets));
+    rescore(edits, targets);
+  }, [rescore]);
 
   const reset = useCallback(() => {
-    if (timer.current) clearTimeout(timer.current);
     abort.current?.abort();
     textsRef.current = ORIGINAL;
     fromRef.current = null;
@@ -156,7 +154,7 @@ function useJev() {
     setStatus("recorded");
   }, []);
 
-  return { texts, scores, pending, status, errorMsg, edit, reset };
+  return { texts, scores, pending, status, errorMsg, edit, commit, reset };
 }
 
 // ---------------------------------------------------------------- pieces
@@ -221,6 +219,7 @@ function Node({
   pending,
   hint,
   onEdit,
+  onCommit,
   onOpen,
 }: {
   event: Event;
@@ -230,6 +229,7 @@ function Node({
   pending: boolean;
   hint: boolean;
   onEdit: (id: string, text: string) => void;
+  onCommit: () => void;
   onOpen: () => void;
 }) {
   const lane = LANE[event.actor];
@@ -245,7 +245,7 @@ function Node({
     <Popover.Root onOpenChange={(open) => open && onOpen()}>
       <Popover.Trigger
         aria-label={`${event.actor}: ${label}. ${flagged ? "Flagged by our mechanism." : ""} Open to read and edit.`}
-        className="group absolute flex -translate-y-1/2 items-center gap-3 rounded-md py-1 pr-2 pl-0 text-left outline-none"
+        className="group absolute flex cursor-pointer -translate-y-1/2 items-center gap-3 rounded-md py-1 pr-2 pl-0 text-left outline-none"
         style={{ left: `calc(${lane.x}% - 7px)`, top: y }}
       >
         <span className="relative flex size-3.5 shrink-0 items-center justify-center">
@@ -303,7 +303,7 @@ function Node({
                 <button
                   type="button"
                   onClick={() => onEdit(event.id, ORIGINAL[event.id])}
-                  className="ml-auto text-[11px] text-white/45 underline-offset-2 hover:text-white hover:underline"
+                  className="ml-auto cursor-pointer text-[11px] text-white/45 underline-offset-2 hover:text-white hover:underline"
                 >
                   Undo edit
                 </button>
@@ -313,6 +313,13 @@ function Node({
             <textarea
               value={text}
               onChange={(e) => onEdit(event.id, e.target.value)}
+              onKeyDown={(e) => {
+                // Enter re-scores; Shift+Enter adds a new line.
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  onCommit();
+                }
+              }}
               aria-label={`Message from ${event.actor}`}
               spellCheck={false}
               className={`field-sizing-content mt-3 max-h-56 min-h-16 w-full resize-none overflow-y-auto rounded-lg border border-white/10 bg-white/[0.04] p-2.5 leading-relaxed text-white/90 outline-none transition-colors focus:border-white/30 focus:bg-white/[0.07] ${
@@ -320,7 +327,7 @@ function Node({
               }`}
             />
             <Popover.Description className="mt-1.5 text-[11px] text-white/35">
-              Rewrite it. Jev re-scores this message and every one after it.
+              Rewrite it, then press Enter. Our mechanism re-scores this message and every one after it.
             </Popover.Description>
 
             {scores && (
@@ -349,7 +356,7 @@ function Node({
 
             {event.error && (
               <p className="mt-4 border-t border-white/10 pt-3 text-[11px] leading-snug text-white/45">
-                <span className="text-white/70">Answer key</span> (Jev never sees
+                <span className="text-white/70">Answer key</span> (our mechanism never sees
                 this): {event.error.truth}
               </p>
             )}
@@ -363,28 +370,21 @@ function Node({
 // ---------------------------------------------------------------- diagram
 
 export function LiveTranscript() {
-  const { texts, scores, pending, status, errorMsg, edit, reset } = useJev();
+  const { texts, scores, pending, status, edit, commit, reset } = useJev();
   const [touched, setTouched] = useState(false);
   const organizer = EVENTS[0];
 
-  const { flagged, planted, caught } = useMemo(() => {
+  const { planted, caught } = useMemo(() => {
     const scored = EVENTS.filter((e) => scores[e.id]);
     const isFlag = (e: Event) => risk(scores[e.id]) >= T;
     const p = scored.filter((e) => e.error);
     return {
-      flagged: scored.filter(isFlag).length,
       planted: p.length,
       caught: p.filter(isFlag).length,
     };
   }, [scores]);
 
   const dirty = Object.entries(texts).some(([id, t]) => t !== ORIGINAL[id]);
-  const statusText = {
-    recorded: "Recorded run",
-    scoring: "Jev is re-scoring…",
-    live: "Live Jev scores",
-    error: `Live scoring unavailable: ${errorMsg}`,
-  }[status];
 
   const fan = (x: number) =>
     `M50,${ORG_Y + 14} C50,${ORG_Y + 80} ${x},${LANE_TOP - 70} ${x},${LANE_TOP}`;
@@ -415,7 +415,7 @@ export function LiveTranscript() {
         <Popover.Root>
           <Popover.Trigger
             aria-label="Organizer instruction. Open to read."
-            className="group absolute left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 outline-none"
+            className="group absolute left-1/2 cursor-pointer flex -translate-x-1/2 flex-col items-center gap-2 outline-none"
             style={{ top: ORG_Y - 8 }}
           >
             <span className="size-7 bg-white transition-transform group-hover:scale-110" />
@@ -475,6 +475,7 @@ export function LiveTranscript() {
             pending={pending.has(e.id)}
             hint={!touched && e.id === "s2-0008"}
             onEdit={edit}
+            onCommit={commit}
             onOpen={() => setTouched(true)}
           />
         ))}
@@ -487,18 +488,16 @@ export function LiveTranscript() {
           <span className="size-9 bg-white" />
           <span className="text-lg font-semibold text-white">Briefing</span>
           <span className="text-xs whitespace-nowrap text-white/55" aria-live="polite">
-            <span style={{ color: ORANGE }}>
-              {caught}/{planted}
-            </span>{" "}
-            planted errors flagged · {flagged} flags ·{" "}
-            <span className={status === "scoring" ? "animate-pulse" : ""}>{statusText}</span>
+            <span className={status === "scoring" ? "animate-pulse" : ""}>
+              {caught}/{planted} planted errors flagged
+            </span>
             {dirty && (
               <>
                 {" · "}
                 <button
                   type="button"
                   onClick={reset}
-                  className="text-white underline underline-offset-2 hover:text-white/70"
+                  className="cursor-pointer text-white underline underline-offset-2 hover:text-white/70"
                 >
                   Reset
                 </button>

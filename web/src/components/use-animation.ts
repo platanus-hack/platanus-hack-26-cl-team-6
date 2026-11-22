@@ -10,6 +10,8 @@ import { useEffect, type RefObject } from "react";
 export function useCanvasAnimation(
   ref: RefObject<HTMLCanvasElement | null>,
   draw: (ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => void,
+  /** Optional frame-rate cap. Return a number per frame to change it on the fly. */
+  fps?: () => number,
 ) {
   useEffect(() => {
     const canvas = ref.current;
@@ -31,8 +33,13 @@ export function useCanvasAnimation(
       draw(ctx, w, h, reduced ? 0 : (performance.now() - start) / 1000);
     };
 
-    const loop = () => {
-      paint();
+    let last = 0;
+    const loop = (now = performance.now()) => {
+      const cap = fps?.();
+      if (!cap || now - last >= 1000 / cap - 1) {
+        last = now;
+        paint();
+      }
       if (!reduced && visible) frame = requestAnimationFrame(loop);
     };
 
@@ -60,7 +67,7 @@ export function useCanvasAnimation(
       ro.disconnect();
       io.disconnect();
     };
-  }, [ref, draw]);
+  }, [ref, draw, fps]);
 }
 
 export function mulberry32(seed: number) {
