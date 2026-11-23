@@ -8,7 +8,8 @@ import { useCanvasAnimation } from "./use-animation";
 // (jev-swarm/scripts/export_run.py --dataset swarm). Each dot is an agent,
 // grouped by the Greek letter in its name. An agent whose latest message Jev
 // flags moves to the centre for a while. There is no answer key, so flags are
-// Jev's verdicts, not confirmed errors.
+// Jev's verdicts, not confirmed errors. The dataset's terms forbid
+// redistribution, so the site ships only Jev's scores, never message text.
 
 const ORANGE = "#ff5a1f";
 const HOLD = 30; // simulated minutes a flagged agent stays in the centre
@@ -33,7 +34,7 @@ const HUE: Record<string, string> = {
   violet: "#a970ff",
 };
 
-type Row = [t: number, agent: number, fab: number, trust: number, text: string, refs: number[]];
+type Row = [t: number, agent: number, fab: number, trust: number];
 type Data = { threshold: number; start: string; phase2: number; agents: string[]; messages: Row[] };
 
 type Model = {
@@ -141,7 +142,6 @@ function Meter({ label, value, t }: { label: string; value: number; t: number })
   );
 }
 
-type Particle = { a: number; b: number; p: number; bad: boolean; bow: number };
 type Sim = {
   time: number;
   playing: boolean;
@@ -151,7 +151,6 @@ type Sim = {
   pos: { x: number; y: number }[];
   placed: boolean;
   spoke: number[]; // real seconds the agent last posted
-  parts: Particle[];
   pointer: { x: number; y: number } | null;
   hover: number;
 };
@@ -188,7 +187,6 @@ function Village({ M }: { M: Model }) {
     pos: M.d.agents.map(() => ({ x: 0, y: 0 })),
     placed: false,
     spoke: M.d.agents.map(() => -10),
-    parts: [],
     pointer: null,
     hover: -1,
   });
@@ -215,13 +213,7 @@ function Village({ M }: { M: Model }) {
 
       const shown = visibleCount(rows, s.time);
       if (shown > s.shown && shown - s.shown < 40) {
-        for (let k = s.shown; k < shown; k++) {
-          const [, a, fab, trust, , refs] = rows[k];
-          s.spoke[a] = t;
-          const bad = Math.max(fab, trust) >= T;
-          for (const b of refs.slice(0, 3))
-            s.parts.push({ a: b, b: a, p: 0, bad, bow: Math.sin(k * 12.9898) * 50 });
-        }
+        for (let k = s.shown; k < shown; k++) s.spoke[rows[k][1]] = t;
       }
       s.shown = shown;
 
@@ -244,37 +236,6 @@ function Village({ M }: { M: Model }) {
         p.x += (target[a][0] - p.x) * ease;
         p.y += (target[a][1] - p.y) * ease;
       });
-
-      // Mentions: a particle from the agent named to the agent who named it.
-      ctx.lineCap = "round";
-      for (const p of s.parts) {
-        p.p += dt * (p.bad ? 0.8 : 1.3);
-        const a = s.pos[p.a];
-        const b = s.pos[p.b];
-        const mx = (a.x + b.x) / 2 - (b.y - a.y) * (p.bow / 300);
-        const my = (a.y + b.y) / 2 + (b.x - a.x) * (p.bow / 300);
-        const at = (u: number) => {
-          const v = 1 - u;
-          return [v * v * a.x + 2 * v * u * mx + u * u * b.x, v * v * a.y + 2 * v * u * my + u * u * b.y] as const;
-        };
-        ctx.strokeStyle = p.bad ? ORANGE : M.colour[p.b];
-        ctx.lineWidth = p.bad ? 1.5 : 1;
-        ctx.globalAlpha = p.bad ? 0.9 : 0.3;
-        ctx.beginPath();
-        for (let k = 0; k <= 6; k++) {
-          const [x, y] = at(Math.max(0, Math.min(1, p.p - 0.2 + (k / 6) * 0.2)));
-          if (k === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-        const [hx, hy] = at(Math.min(1, p.p));
-        ctx.fillStyle = p.bad ? ORANGE : "#fff";
-        ctx.globalAlpha = p.bad ? 1 : 0.6;
-        ctx.beginPath();
-        ctx.arc(hx, hy, p.bad ? 2.4 : 1.3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      s.parts = s.parts.filter((p) => p.p < 1);
 
       s.pos.forEach((p, a) => {
         const since = t - s.spoke[a];
@@ -323,7 +284,7 @@ function Village({ M }: { M: Model }) {
         setHover(p ? { agent: best, x: p.x, y: p.y, flip: p.x > w - 340, below: p.y < 180 } : null);
       }
     },
-    [M, T],
+    [M],
   );
 
   useCanvasAnimation(ref, draw);
@@ -356,7 +317,6 @@ function Village({ M }: { M: Model }) {
   const jump = (time: number) => {
     const s = sim.current;
     s.time = Math.max(0, Math.min(M.length, time));
-    s.parts = [];
   };
   const toggle = () => {
     const s = sim.current;
@@ -405,9 +365,9 @@ function Village({ M }: { M: Model }) {
               "133 agents boot up and start planning a shared simulation of Earth."
             ) : (
               <>
-                <span style={{ color: ORANGE }}>{M.d.agents[M.d.messages[latestFlag][1]]}</span> was flagged: “
-                {M.d.messages[latestFlag][4].slice(0, 110)}
-                {M.d.messages[latestFlag][4].length > 110 ? "…" : ""}”
+                <span style={{ color: ORANGE }}>{M.d.agents[M.d.messages[latestFlag][1]]}</span> was flagged:
+                fabrication {M.d.messages[latestFlag][2].toFixed(2)}, unverified trust{" "}
+                {M.d.messages[latestFlag][3].toFixed(2)}.
               </>
             )}
           </p>
@@ -430,7 +390,8 @@ function Village({ M }: { M: Model }) {
           )}
           <p className="mt-auto text-[11px] leading-relaxed text-white/35">
             A real run: AI Village&apos;s Swarm Village, 133 copies of GLM 5.3 Flash in one chat for 24
-            hours (Aug 29–30, 2026). Each dot is an agent, grouped by the Greek letter in its name.
+            hours (Aug 29–30, 2026). Each dot is an agent, grouped by the Greek letter in its name. Only
+            Jev&apos;s scores are shown; the messages belong to AI Village.
           </p>
         </aside>
 
@@ -493,9 +454,6 @@ function Village({ M }: { M: Model }) {
                       Flagged by Jev
                     </p>
                   )}
-                  <p className="mt-2 max-h-28 overflow-hidden text-sm leading-relaxed text-white/80 [mask-image:linear-gradient(180deg,#000_75%,transparent)]">
-                    {hrow[4]}
-                  </p>
                   <div className="mt-3 flex flex-col gap-2.5">
                     <Meter label="Fabrication" value={hrow[2]} t={T} />
                     <Meter label="Unverified trust" value={hrow[3]} t={T} />
@@ -572,9 +530,6 @@ function Village({ M }: { M: Model }) {
           </span>
           <span className="flex items-center gap-2">
             <span className="h-3 w-px" style={{ backgroundColor: ORANGE }} /> one flagged message
-          </span>
-          <span className="flex items-center gap-2">
-            <span className="w-5 border-t-2 border-white/40" /> one agent naming another
           </span>
           <span className="flex items-center gap-2">
             <span className="h-3 w-px bg-white/30" /> phase 2 starts

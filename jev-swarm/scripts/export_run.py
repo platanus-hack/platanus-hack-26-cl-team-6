@@ -82,28 +82,24 @@ def export(name: str) -> None:
 
 
 def export_swarm() -> None:
-    """AI Village swarm village -> web/public/data/swarm-village.json (fetched at runtime, gitignored: the dataset's
-    terms are research-only, so confirm with AI Digest before deploying it publicly). Compact rows:
-    [minute, agent index, fabrication, unverified_trust, text excerpt, [mentioned agent indices]]."""
-    import re
+    """AI Village swarm village -> web/public/data/swarm-village.json (committed and served to the site).
+
+    The dataset's terms are research-only and forbid redistribution, so this exports only Jev's results: no
+    message text and nothing derived from it. Compact rows: [minute, agent index, fabrication, unverified_trust]."""
     events = json.loads((ROOT / "data/swarm-village-run/seed-1.json").read_text())["events"]
     rows = {r["id"]: r for r in json.loads((ROOT / "results/swarm.json").read_text())["rows"]}
     agents = sorted({e["actor"] for e in events if e["role"] == "agent"})
     idx = {a: i for i, a in enumerate(agents)}
-    name_re = re.compile(r"\b(" + "|".join(map(re.escape, sorted(agents, key=len, reverse=True))) + r")\b")
     t0 = datetime.fromisoformat(events[0]["ts"])
     msgs = []
     for e in events:
         r = rows.get(e["id"])
         if not r:
             continue
-        text = " ".join(e["content"].split())
-        refs = sorted({idx[m] for m in name_re.findall(e["content"]) if m != e["actor"]})
         msgs.append([round((datetime.fromisoformat(e["ts"]) - t0).total_seconds() / 60, 2), idx[e["actor"]],
-                     r["scores"]["fabrication"], r["scores"]["unverified_trust"],
-                     text[:240] + ("…" if len(text) > 240 else ""), refs])
+                     r["scores"]["fabrication"], r["scores"]["unverified_trust"]])
     out = {
-        "source": "AI Village swarm village (Hugging Face aidigestorg/ai-village); Jev scores from results/swarm.json",
+        "source": "Jev scores on AI Village's Swarm Village (results/swarm.json); message text is not included",
         "threshold": C.THRESHOLD,
         "start": events[0]["ts"],
         # Phase 2 (roles) began at 3am Pacific, Aug 30 = 10:00 UTC.

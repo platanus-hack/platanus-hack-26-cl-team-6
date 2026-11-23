@@ -24,4 +24,4 @@ Corrimos el mismo sistema, sin cambiar nada, sobre 133 agentes de AI Village que
 
 En la página
 
-Puedes ver el enjambre de AI Village con sus marcas, hacer clic en cualquier mensaje, reescribirlo y ver cómo el modelo lo vuelve a evaluar al instante.
+Puedes reproducir las 24 horas del enjambre de AI Village y ver cuándo y a qué agentes marca el modelo, con los puntajes de cada mensaje. Por los términos de uso de AI Village, la página muestra solo nuestros puntajes, no el texto de los mensajes.
