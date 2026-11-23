@@ -74,11 +74,11 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center gap-12 text-center md:gap-14">
         <div className="flex flex-col items-center gap-5 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-          <h1 className="max-w-3xl px-12 text-4xl leading-[1.02] font-light tracking-[-0.035em] text-white md:px-0 md:text-6xl lg:text-7xl">
+          <h1 className="max-w-xl px-12 text-4xl leading-[1.02] font-light tracking-[-0.035em] text-white md:px-0 md:text-6xl lg:text-7xl">
             Catch swarm hallucinations live, at any scale.
           </h1>
           <p className="max-w-md px-8 text-sm leading-relaxed text-white/60 md:px-0 md:text-base">
-            Errors flagged before they can cascade. Click any dot to try it live.
+            Errors flagged before they can cascade. <br></br> Click any dot to try it live.
           </p>
         </div>
         <LiveTranscript />

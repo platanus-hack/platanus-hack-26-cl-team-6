@@ -84,12 +84,15 @@ def export(name: str) -> None:
 def export_swarm() -> None:
     """AI Village swarm village -> web/public/data/swarm-village.json (committed and served to the site).
 
-    The dataset's terms are research-only and forbid redistribution, so this exports only Jev's results: no
-    message text and nothing derived from it. Compact rows: [minute, agent index, fabrication, unverified_trust]."""
+    The dataset's terms are research-only and forbid redistribution, so this exports only Jev's results plus the
+    timing metadata the replay needs, never message text. Compact rows:
+    [minute, agent index, fabrication, unverified_trust, [indices of agents the message names]]."""
+    import re
     events = json.loads((ROOT / "data/swarm-village-run/seed-1.json").read_text())["events"]
     rows = {r["id"]: r for r in json.loads((ROOT / "results/swarm.json").read_text())["rows"]}
     agents = sorted({e["actor"] for e in events if e["role"] == "agent"})
     idx = {a: i for i, a in enumerate(agents)}
+    name_re = re.compile(r"\b(" + "|".join(map(re.escape, sorted(agents, key=len, reverse=True))) + r")\b")
     t0 = datetime.fromisoformat(events[0]["ts"])
     msgs = []
     for e in events:
@@ -97,7 +100,8 @@ def export_swarm() -> None:
         if not r:
             continue
         msgs.append([round((datetime.fromisoformat(e["ts"]) - t0).total_seconds() / 60, 2), idx[e["actor"]],
-                     r["scores"]["fabrication"], r["scores"]["unverified_trust"]])
+                     r["scores"]["fabrication"], r["scores"]["unverified_trust"],
+                     sorted({idx[m] for m in name_re.findall(e["content"]) if m != e["actor"]})])
     out = {
         "source": "Jev scores on AI Village's Swarm Village (results/swarm.json); message text is not included",
         "threshold": C.THRESHOLD,

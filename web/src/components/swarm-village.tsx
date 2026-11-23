@@ -9,7 +9,8 @@ import { useCanvasAnimation } from "./use-animation";
 // grouped by the Greek letter in its name. An agent whose latest message Jev
 // flags moves to the centre for a while. There is no answer key, so flags are
 // Jev's verdicts, not confirmed errors. The dataset's terms forbid
-// redistribution, so the site ships only Jev's scores, never message text.
+// redistribution, so the site ships only Jev's scores and who-named-whom
+// timing, never message text.
 
 const ORANGE = "#ff5a1f";
 const HOLD = 30; // simulated minutes a flagged agent stays in the centre
@@ -34,7 +35,7 @@ const HUE: Record<string, string> = {
   violet: "#a970ff",
 };
 
-type Row = [t: number, agent: number, fab: number, trust: number];
+type Row = [t: number, agent: number, fab: number, trust: number, refs: number[]];
 type Data = { threshold: number; start: string; phase2: number; agents: string[]; messages: Row[] };
 
 type Model = {
@@ -142,6 +143,7 @@ function Meter({ label, value, t }: { label: string; value: number; t: number })
   );
 }
 
+type Particle = { a: number; b: number; p: number; bad: boolean; bow: number };
 type Sim = {
   time: number;
   playing: boolean;
@@ -151,6 +153,7 @@ type Sim = {
   pos: { x: number; y: number }[];
   placed: boolean;
   spoke: number[]; // real seconds the agent last posted
+  parts: Particle[];
   pointer: { x: number; y: number } | null;
   hover: number;
 };
@@ -187,6 +190,7 @@ function Village({ M }: { M: Model }) {
     pos: M.d.agents.map(() => ({ x: 0, y: 0 })),
     placed: false,
     spoke: M.d.agents.map(() => -10),
+    parts: [],
     pointer: null,
     hover: -1,
   });
@@ -213,7 +217,13 @@ function Village({ M }: { M: Model }) {
 
       const shown = visibleCount(rows, s.time);
       if (shown > s.shown && shown - s.shown < 40) {
-        for (let k = s.shown; k < shown; k++) s.spoke[rows[k][1]] = t;
+        for (let k = s.shown; k < shown; k++) {
+          const [, a, fab, trust, refs] = rows[k];
+          s.spoke[a] = t;
+          const bad = Math.max(fab, trust) >= T;
+          for (const b of refs.slice(0, 3))
+            s.parts.push({ a: b, b: a, p: 0, bad, bow: Math.sin(k * 12.9898) * 50 });
+        }
       }
       s.shown = shown;
 
@@ -236,6 +246,37 @@ function Village({ M }: { M: Model }) {
         p.x += (target[a][0] - p.x) * ease;
         p.y += (target[a][1] - p.y) * ease;
       });
+
+      // Mentions: a particle from the agent named to the agent who named it.
+      ctx.lineCap = "round";
+      for (const p of s.parts) {
+        p.p += dt * (p.bad ? 0.8 : 1.3);
+        const a = s.pos[p.a];
+        const b = s.pos[p.b];
+        const mx = (a.x + b.x) / 2 - (b.y - a.y) * (p.bow / 300);
+        const my = (a.y + b.y) / 2 + (b.x - a.x) * (p.bow / 300);
+        const at = (u: number) => {
+          const v = 1 - u;
+          return [v * v * a.x + 2 * v * u * mx + u * u * b.x, v * v * a.y + 2 * v * u * my + u * u * b.y] as const;
+        };
+        ctx.strokeStyle = p.bad ? ORANGE : M.colour[p.b];
+        ctx.lineWidth = p.bad ? 1.5 : 1;
+        ctx.globalAlpha = p.bad ? 0.9 : 0.3;
+        ctx.beginPath();
+        for (let k = 0; k <= 6; k++) {
+          const [x, y] = at(Math.max(0, Math.min(1, p.p - 0.2 + (k / 6) * 0.2)));
+          if (k === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        const [hx, hy] = at(Math.min(1, p.p));
+        ctx.fillStyle = p.bad ? ORANGE : "#fff";
+        ctx.globalAlpha = p.bad ? 1 : 0.6;
+        ctx.beginPath();
+        ctx.arc(hx, hy, p.bad ? 2.4 : 1.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      s.parts = s.parts.filter((p) => p.p < 1);
 
       s.pos.forEach((p, a) => {
         const since = t - s.spoke[a];
@@ -284,7 +325,7 @@ function Village({ M }: { M: Model }) {
         setHover(p ? { agent: best, x: p.x, y: p.y, flip: p.x > w - 340, below: p.y < 180 } : null);
       }
     },
-    [M],
+    [M, T],
   );
 
   useCanvasAnimation(ref, draw);
@@ -317,6 +358,7 @@ function Village({ M }: { M: Model }) {
   const jump = (time: number) => {
     const s = sim.current;
     s.time = Math.max(0, Math.min(M.length, time));
+    s.parts = [];
   };
   const toggle = () => {
     const s = sim.current;
@@ -533,6 +575,9 @@ function Village({ M }: { M: Model }) {
           </span>
           <span className="flex items-center gap-2">
             <span className="h-3 w-px bg-white/30" /> phase 2 starts
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="w-5 border-t-2 border-white/40" /> one agent naming another
           </span>
         </div>
       </div>
